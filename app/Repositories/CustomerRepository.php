@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 class CustomerRepository
 {
     protected $customer;
+    protected $customer_chunk;
 
     public function __construct(Customer $customer)
     {
@@ -132,5 +133,35 @@ class CustomerRepository
         return $this->customer
             ->where('id', $id)
             ->delete();
+    }
+
+    public function unique($post)
+    {
+        return $this->customer
+            ->where('name', 'like', '%'.$post['name'].'%')
+            ->orWhere('phone', 'like', '%'.$post['phone'].'%')
+            ->orWhere('company', 'like', '%'.$post['company'].'%')
+            ->first();
+    }
+
+    public function reverseUnique($post)
+    {
+        $this->customer->chunk(50, function ($customers) use ($post) {
+            foreach ($customers as $customer) {
+                if (strpos($post['name'], $customer['name']) !== false) {
+                    return $this->customer_chunk = $customer;
+                }
+
+                if (strpos($post['phone'], $customer['phone']) !== false) {
+                    return $this->customer_chunk = $customer;
+                }
+
+                if (strpos($post['company'], $customer['company']) !== false) {
+                    return $this->customer_chunk = $customer;
+                }
+            }
+        });
+
+        return $this->customer_chunk;
     }
 }

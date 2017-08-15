@@ -87,8 +87,9 @@ class CustomerService
         $add['salesman_id'] = $post['salesman_id'];
         $add['name'] = $post['name'];
         $add['phone'] = $post['phone'];
-        $add['email'] = $post['email'];
+        $add['email'] = $post['email'] ?? 0;
         $add['company'] = $post['company'];
+        $add['remark'] = $post['remark'] ?? null;
 
         $customer = Customer::find($id);
 
@@ -107,6 +108,36 @@ class CustomerService
                 "现在客户:".json_encode(Customer::find($id)->toArray())
             );
         }
+    }
+
+    /**
+     * 判断是否有匹配的记录
+     *
+     * @param $post
+     * @return bool
+     * @throws \Exception
+     */
+    public function unique($post)
+    {
+        //正向搜索
+        $result = $this->customer->unique($post);
+
+        //反向搜索
+        if (empty($result)) {
+            $result = $this->customer->reverseUnique($post);
+        }
+
+        if (!empty($result)) {
+            throw new \Exception(
+                '已经存在以下类似记录'."\r\n".
+                '姓名：'.$result['name']."\r\n".
+                '电话：'.$result['phone']."\r\n".
+                '公司:'.$result['company']."\r\n".
+                '请核对！'
+            );
+        }
+
+        return true;
     }
 
     /**

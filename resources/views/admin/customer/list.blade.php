@@ -32,9 +32,9 @@
 		                <tr>
 		                    <th>ID</th>
 		                    <th>姓名</th>
-		                    <th>邮箱</th>
                             <th>手机</th>
                             <th>公司</th>
+                            <th>备注</th>
                             <th>添加时间</th>
 							<th>操作</th>
 		                </tr>
@@ -45,9 +45,9 @@
                         <tr>
                             <td>{{ $customer['id'] }}</td>
                             <td>{{ $customer['name'] }}</td>
-                            <td>{{ $customer['email'] }}</td>
                             <td>{{ $customer['phone'] }}</td>
                             <td>{{ $customer['company'] }}</td>
+                            <td>{{ $customer['remark'] }}</td>
                             <td>{{ $customer['created_at'] }}</td>
                             <td>
                                 <button class="btn btn-info" type="button" onclick="location='{{ route('customer_update', ['id' => $customer['id'] ]) }}'">编辑</button>

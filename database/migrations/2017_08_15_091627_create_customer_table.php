@@ -18,8 +18,9 @@ class CreateCustomerTable extends Migration
             $table->integer('salesman_id');
             $table->string('name')->index();
             $table->string('phone')->unique();
-            $table->string('email')->unique();
+            $table->string('email')->nullable();
             $table->string('company');
+            $table->longText('remark')->nullable();
             $table->timestamps();
         });
     }

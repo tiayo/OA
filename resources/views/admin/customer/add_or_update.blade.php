@@ -47,15 +47,15 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label for="email" class="col-sm-2 col-sm-2 control-label">客户邮箱</label>
-                        <div class="col-sm-3">
-                            <input type="email" class="form-control" id="email" name="email" value="{{ $old_input['email'] or null}}">
-                        </div>
-                    </div>
-                    <div class="form-group">
                         <label for="company" class="col-sm-2 col-sm-2 control-label">客户公司</label>
                         <div class="col-sm-3">
                             <input type="text" class="form-control" id="company" name="company" value="{{ $old_input['company'] or null}}">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="remark" class="col-sm-2 col-sm-2 control-label">备注</label>
+                        <div class="col-sm-3">
+                            <textarea class="form-control" id="remark" name="remark">{{ $old_input['remark'] or null}}</textarea>
                         </div>
                     </div>
                     <div class="group">

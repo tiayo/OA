@@ -100,7 +100,8 @@ class CustomerController extends Controller
     /**
      * 添加/更新提交
      *
-     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     * @param null $id
+     * @return mixed|\Illuminate\Http\RedirectResponse
      */
     public function post($id = null)
     {
@@ -108,17 +109,21 @@ class CustomerController extends Controller
             'salesman_id' => 'required|integer',
             'name' => 'required',
             'phone' => 'required',
-            'email' => 'required|email',
             'company' => 'required',
+            'email' => 'email',
         ]);
 
         if (empty($id)) {
 
             //验证唯一性
-            $this->validate($this->request, [
-                'phone' => 'unique:customers',
-                'email' => 'unique:customers',
-            ]);
+            try {
+                $this->customer->unique($this->request->all());
+            } catch (\Exception $e) {
+                return redirect()
+                    ->back()
+                    ->withInput($this->request->all())
+                    ->withErrors($e->getMessage());
+            }
 
             //执行添加操作
             $this->customer->updateOrCreate($this->request->all());
