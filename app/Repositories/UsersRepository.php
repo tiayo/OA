@@ -24,8 +24,8 @@ class UsersRepository
             return $this->user
                 ->where('type', 0)
                 ->where(function ($query) use ($keyword) {
-                    $query->where('name', 'like', $keyword)
-                        ->orwhere('email', 'like', $keyword);
+                    $query->where('name', 'like', "%$keyword%")
+                        ->orwhere('email', 'like', "%$keyword%");
                 })
                 ->orderBy('id', 'desc')
                 ->first();
