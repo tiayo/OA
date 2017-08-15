@@ -25,10 +25,10 @@ class CustomerRepository
             return $this->customer
                 ->where('salesman_id', Auth::id())
                 ->where(function ($query) use ($keyword) {
-                    $query->where('name', $keyword)
-                        ->orwhere('email', $keyword)
-                        ->orwhere('phone', $keyword)
-                        ->orwhere('company', $keyword);
+                    $query->where('name', 'like', $keyword)
+                        ->orwhere('email', 'like', $keyword)
+                        ->orwhere('phone', 'like', $keyword)
+                        ->orwhere('company', 'like', $keyword);
                 })
                 ->skip(($page-1) * $num)
                 ->take($num)
@@ -49,10 +49,10 @@ class CustomerRepository
         if (!empty($keyword)) {
             return $this->customer
                 ->where(function ($query) use ($keyword) {
-                    $query->where('name', $keyword)
-                        ->orwhere('email', $keyword)
-                        ->orwhere('phone', $keyword)
-                        ->orwhere('company', $keyword);
+                    $query->where('name', 'like', $keyword)
+                        ->orwhere('email', 'like', $keyword)
+                        ->orwhere('phone', 'like', $keyword)
+                        ->orwhere('company', 'like', $keyword);
                 })
                 ->skip(($page-1) * $num)
                 ->take($num)
@@ -73,10 +73,10 @@ class CustomerRepository
             return $this->customer
                 ->where('salesman_id', Auth::id())
                 ->where(function ($query) use ($keyword) {
-                    $query->where('name', $keyword)
-                        ->orwhere('email', $keyword)
-                        ->orwhere('phone', $keyword)
-                        ->orwhere('company', $keyword);
+                    $query->where('name', 'like', $keyword)
+                        ->orwhere('email', 'like', $keyword)
+                        ->orwhere('phone', 'like', $keyword)
+                        ->orwhere('company', 'like', $keyword);
                 })
                 ->count();
         }
@@ -92,10 +92,10 @@ class CustomerRepository
         if (!empty($keyword)) {
             return $this->customer
                 ->where(function ($query) use ($keyword) {
-                    $query->where('name', $keyword)
-                        ->orwhere('email', $keyword)
-                        ->orwhere('phone', $keyword)
-                        ->orwhere('company', $keyword);
+                    $query->where('name', 'like', $keyword)
+                        ->orwhere('email', 'like', $keyword)
+                        ->orwhere('phone', 'like', $keyword)
+                        ->orwhere('company', 'like', $keyword);
                 })
                 ->count();
         }

@@ -6,6 +6,7 @@ use App\Customer;
 use App\Repositories\CustomerRepository;
 use App\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class CustomerService
 {
@@ -89,11 +90,23 @@ class CustomerService
         $add['email'] = $post['email'];
         $add['company'] = $post['company'];
 
-        if (!empty($id) && !Auth::user()->can('control', Customer::find($id))) {
+        $customer = Customer::find($id);
+
+        if (!empty($id) && !Auth::user()->can('control', $customer)) {
             throw new \Exception('不是您的客户！');
         }
 
-        return $this->customer->updateOrCreate($add, $id);
+        $this->customer->updateOrCreate($add, $id);
+
+        if (!empty($id) && !empty($customer)) {
+            return Log::info(
+                "用户："
+                .Auth::user()['name']."(".Auth::id().
+                ")更新原客户:".
+                json_encode($customer->toArray()).
+                "现在客户:".json_encode(Customer::find($id)->toArray())
+            );
+        }
     }
 
     /**
@@ -104,11 +117,27 @@ class CustomerService
      */
     public function destroy($id)
     {
+        $customer = Customer::find($id);
+
+        if (empty($customer)) {
+            throw new \Exception('没有查询到客户！');
+        }
+
         //验证操作权限
-        if (!Auth::user()->can('control', Customer::find($id))) {
+        if (!Auth::user()->can('control', $customer)) {
             throw new \Exception('不是您的客户！');
         }
 
-        return $this->customer->destroy($id);
+        if ($this->customer->destroy($id))
+        {
+            return Log::info(
+                "用户：" .
+                Auth::user()['name']."(".Auth::id().
+                ")删除了客户:".
+                json_encode($customer->toArray())
+            );
+        }
+
+        throw new \Exception('删除失败！');
     }
 }
