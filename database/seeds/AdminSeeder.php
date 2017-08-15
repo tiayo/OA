@@ -45,7 +45,7 @@ class AdminSeeder extends Seeder
         return $this->user
             ->where('id', $id)
             ->update([
-                'password' => bcrypt('123456'),
+                'password' => bcrypt(env('ADMIN_PASSWORD', '123456')),
             ]);
     }
 }
