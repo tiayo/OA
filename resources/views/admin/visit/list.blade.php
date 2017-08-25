@@ -36,7 +36,9 @@
                             <th>客户</th>
                             <th>记录</th>
                             <th>添加时间</th>
-							<th>操作</th>
+                            @if($auth = Auth::user()->can('admin', \App\User::class))
+							    <th>操作</th>
+                            @endif
 		                </tr>
 		            </thead>
 
@@ -48,12 +50,13 @@
                             <td>{{ $list['customer_name'] }}</td>
                             <td>{{ $list['record'] }}</td>
                             <td>{{ $list['created_at'] }}</td>
-                            <td>
-                                @if(Auth::user()->can('admin', \App\User::class))
+                            @if($auth)
+                                <td>
                                     <button class="btn btn-info" type="button" onclick="location='{{ route('visit_update', ['id' => $list['id'] ]) }}'">编辑</button>
                                     <button class="btn btn-danger" type="button" onclick="javascript:if(confirm('确实要删除吗?'))location='{{ route('visit_destroy', ['id' => $list['id'] ]) }}'">删除</button>
-                                @endif
-                            </td>
+
+                                </td>
+                            @endif
                         </tr>
                         @endforeach
                     </tbody>

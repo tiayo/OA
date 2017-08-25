@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Repositories\VisitRepository;
+use App\Services\Admin\CustomerService;
 use App\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -10,10 +11,12 @@ use Illuminate\Support\Facades\Log;
 class VisitService
 {
     protected $visit;
+    protected $customer;
 
-    public function __construct(VisitRepository $visit)
+    public function __construct(VisitRepository $visit, CustomerService $customer)
     {
         $this->visit = $visit;
+        $this->customer = $customer;
     }
 
     /**
@@ -72,10 +75,10 @@ class VisitService
      */
     public function updateOrCreate($post, $id = null)
     {
-        $add['salesman_id'] = Auth::id();
         $add['record'] = $post['record'] ?? null;
 
         if (empty($id)) {
+            $add['salesman_id'] = $this->customer->first($post['customer_id'])['salesman_id'];
             $add['customer_id'] = $post['customer_id'];
         }
 
