@@ -112,6 +112,8 @@ class CustomerService
 
     /**
      * 判断是否有匹配的记录
+     * 正向匹配为数据库查询
+     * 反向匹配为php查询
      *
      * @param $post
      * @return bool

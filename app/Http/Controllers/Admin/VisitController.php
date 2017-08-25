@@ -4,17 +4,20 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Services\Admin\CustomerService;
+use App\Services\VisitService;
 use Illuminate\Http\Request;
 
-class CustomerController extends Controller
+class VisitController extends Controller
 {
-    protected $customer;
+    protected $visit;
     protected $request;
+    protected $customer;
 
-    public function __construct(CustomerService $customer, Request $request)
+    public function __construct(VisitService $visit, Request $request, CustomerService $customer)
     {
-        $this->customer = $customer;
+        $this->visit = $visit;
         $this->request = $request;
+        $this->customer = $customer;
     }
 
     /**
@@ -24,16 +27,19 @@ class CustomerController extends Controller
      */
     public function listView($page)
     {
+        $customers = $this->customer->get(1, 10000);
+
         $num = config('site.list_num');
 
-        $customers = $this->customer->get($page, $num);
+        $lists = $this->visit->get($page, $num);
 
-        return view('admin.customer.list', [
-            'customers' => $customers,
+        return view('admin.visit.list', [
+            'lists' => $lists,
             'page' => $page == 1 ? 2 : $page,
             'current' =>  $page,
             'num' => $num,
-            'count' => ceil($this->customer->countGet() / $num),
+            'count' => ceil($this->visit->countGet() / $num),
+            'customers' => $customers,
         ]);
     }
 
@@ -46,14 +52,17 @@ class CustomerController extends Controller
     {
         $num = config('site.list_num');
 
-        $customers = $this->customer->get($page, $num, $keyword);
+        $lists = $this->visit->get($page, $num, $keyword);
 
-        return view('admin.customer.list', [
-            'customers' => $customers,
+        $customers = $this->customer->get(1, 10000);
+
+        return view('admin.visit.list', [
+            'lists' => $lists,
             'page' => $page == 1 ? 2 : $page,
             'current' =>  $page,
             'num' => $num,
-            'count' => ceil($this->customer->countGet($keyword) / $num),
+            'count' => ceil($this->visit->countGet($keyword) / $num),
+            'customers' => $customers,
         ]);
     }
 
@@ -64,10 +73,13 @@ class CustomerController extends Controller
      */
     public function addView()
     {
-        return view('admin.customer.add_or_update', [
+        $customers = $this->customer->get(1, 10000);
+
+        return view('admin.visit.add_or_update', [
             'old_input' => $this->request->session()->get('_old_input'),
-            'url' => Route('customer_add'),
+            'url' => Route('visit_add'),
             'sign' => 'add',
+            'customers' => $customers,
         ]);
     }
 
@@ -78,22 +90,26 @@ class CustomerController extends Controller
      */
     public function updateView($id)
     {
-        if ($this->request->session()->has('_old_input')) {
-            //从session获取
-            $old_input = session('_old_input');
-        } else {
+        //获取当前业务员所有客户
+        $customers = $this->customer->get(1, 10000);
+
+        //从session获取
+        $old_input = session('_old_input');
+
+        if (empty($old_input)) {
             //从数据库获取
             try {
-                $old_input = $this->customer->first($id);
+                $old_input = $this->visit->first($id);
             } catch (\Exception $e) {
-               return response($e->getMessage(), 403);
+                return response($e->getMessage(), 403);
             }
         }
 
-        return view('admin.customer.add_or_update', [
+        return view('admin.visit.add_or_update', [
             'old_input' => $old_input,
-            'url' => Route('customer_update', ['id' => $id]),
+            'url' => Route('visit_update', ['id' => $id]),
             'sign' => 'update',
+            'customers' => $customers,
         ]);
     }
 
@@ -106,35 +122,20 @@ class CustomerController extends Controller
     public function post($id = null)
     {
         $this->validate($this->request, [
-            'salesman_id' => 'required|integer',
-            'name' => 'required',
-            'phone' => 'required',
-            'company' => 'required',
-            'email' => 'email',
+            'record' => 'required',
         ]);
 
+        //添加记录判断
         if (empty($id)) {
-
-            //验证唯一性
-            try {
-                $this->customer->unique($this->request->all());
-            } catch (\Exception $e) {
-                return redirect()
-                    ->back()
-                    ->withInput($this->request->all())
-                    ->withErrors($e->getMessage());
-            }
-
-            //执行添加操作
-            $this->customer->updateOrCreate($this->request->all());
-
-        } else {
-
-            //执行更新操作
-            $this->customer->updateOrCreate($this->request->all(), $id);
+            $this->validate($this->request, [
+                'customer_id' => 'required|integer',
+            ]);
         }
 
-        return redirect()->route('customer_list_simple');
+        //执行操作
+        $this->visit->updateOrCreate($this->request->all(), $id);
+
+        return redirect()->route('visit_list_simple');
     }
 
     /**
@@ -146,11 +147,11 @@ class CustomerController extends Controller
     public function destroy($id)
     {
         try {
-            $this->customer->destroy($id);
+            $this->visit->destroy($id);
         } catch (\Exception $e) {
             return response($e->getMessage());
         }
 
-        return redirect()->route('customer_list_simple');
+        return redirect()->route('visit_list_simple');
     }
 }

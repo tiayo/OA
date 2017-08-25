@@ -13,6 +13,7 @@
         <ul class="sub-menu-list">
             <li id="nav_1_1"><a href="{{ Route('customer_list_simple') }}">客户列表</a></li>
             <li id="nav_1_2"><a href="{{ Route('customer_add') }}">添加客户</a></li>
+            <li id="nav_1_3"><a href="{{ Route('visit_list_simple') }}">客户跟踪记录</a></li>
         </ul>
     </li>
 

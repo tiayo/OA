@@ -75,18 +75,20 @@ class SalesmanController extends Controller
     public function post($id = null)
     {
         $this->validate($this->request, [
-            'name' => 'required|unique:users',
-            'email' => 'required|email|unique:users',
+            'name' => 'required',
+            'email' => 'required|email',
             'password' => 'min:6',
         ]);
 
-        if (empty($id) && $id !== 0) {
-            //执行添加操作
-            $this->salesman->updateOrCreate($this->request->all());
-        } else {
-            //执行更新操作
-            $this->salesman->updateOrCreate($this->request->all(), $id);
+        //唯一性验证
+        if (empty($id)) {
+            $this->validate($this->request, [
+                'name' => 'unique:users',
+                'email' => 'unique:users',
+            ]);
         }
+
+        $this->salesman->updateOrCreate($this->request->all(), $id);
 
         return redirect()->route('salesman_list_simple');
     }

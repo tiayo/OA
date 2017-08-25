@@ -35,25 +35,53 @@ Route::group(['namespace' => 'Admin', 'prefix' => 'admin'], function () {
             Route::post('/salesman/update/{id}', 'SalesmanController@post');
             Route::get('/salesman/destroy/{id}', 'SalesmanController@destroy')->name('salesman_destroy');
             Route::get('/salesman/search', 'SalesmanController@search')->name('salesman_search');
+
+            //修改客户回访信息
+            Route::get('/visit/update/{id}', 'VisitController@updateView')->name('visit_update');
+            Route::post('/visit/update/{id}', 'VisitController@post');
+
+            //删除客户
+            Route::get('/visit/destroy/{id}', 'VisitController@destroy')->name('visit_destroy');
         });
 
         // ---------------------------业务员操作--------------------------- //
+        //客户列表
         Route::get('/customer/list', function () {
             return redirect()->route('customer_list', ['page' => 1]);
         })->name('customer_list_simple');
         Route::get('/customer/list/{page}', 'CustomerController@listView')->name('customer_list');
 
+        //添加客户
         Route::get('/customer/add', 'CustomerController@addView')->name('customer_add');
         Route::post('/customer/add', 'CustomerController@post');
 
+        //修改客户信息
         Route::get('/customer/update/{id}', 'CustomerController@updateView')->name('customer_update');
         Route::post('/customer/update/{id}', 'CustomerController@post');
 
+        //删除客户
         Route::get('/customer/destroy/{id}', 'CustomerController@destroy')->name('customer_destroy');
 
+        //搜索客户
         Route::get('/customer/search', function () {
             return redirect()->route('customer_search', ['page' => 1, 'keyword' => Request::get('keyword')]);
         })->name('customer_search_simple');
         Route::get('/customer/search/{page}/{keyword}', 'CustomerController@search')->name('customer_search');
+
+        //客户回访记录列表
+        Route::get('/visit/list', function () {
+            return redirect()->route('visit_list', ['page' => 1]);
+        })->name('visit_list_simple');
+        Route::get('/visit/list/{page}', 'VisitController@listView')->name('visit_list');
+
+        //添加客户回访记录
+        Route::get('/visit/add', 'VisitController@addView')->name('visit_add');
+        Route::post('/visit/add', 'VisitController@post');
+
+        //搜索客户回访记录
+        Route::get('/visit/search', function () {
+            return redirect()->route('visit_search', ['page' => 1, 'keyword' => Request::get('keyword')]);
+        })->name('visit_search_simple');
+        Route::get('/visit/search/{page}/{keyword}', 'VisitController@search')->name('visit_search');
     });
 });
