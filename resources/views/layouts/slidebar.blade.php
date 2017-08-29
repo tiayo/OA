@@ -1,6 +1,6 @@
 <!--sidebar nav start-->
 <ul style="margin-top:100px;" class="nav nav-pills nav-stacked custom-nav">
-    @if(Auth::guard()->user()->can('view', \App\User::class))
+    @if(Auth::user()->can('manage', \App\User::class))
         <li class="menu-list" id="nav_0"><a href=""><i class="fa fa-user"></i> <span>管理员操作</span></a>
             <ul class="sub-menu-list">
                 <li id="nav_0_1"><a href="{{ Route('salesman_list_simple') }}">业务员列表</a></li>

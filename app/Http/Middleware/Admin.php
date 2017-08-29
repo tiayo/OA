@@ -18,7 +18,7 @@ class Admin
      */
     public function handle($request, Closure $next, $guard = null)
     {
-        if (!Auth::guard($guard)->user()->can('view', User::class)) {
+        if (!Auth::guard($guard)->user()->can('manage', User::class)) {
             return redirect()->route('admin');
         }
 

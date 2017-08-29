@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Services\Admin\SalesmanService;
+use App\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class SalesmanController extends Controller
 {
@@ -78,6 +80,7 @@ class SalesmanController extends Controller
             'name' => 'required',
             'email' => 'required|email',
             'password' => 'min:6',
+            'type' => 'required',
         ]);
 
         //唯一性验证
@@ -88,7 +91,11 @@ class SalesmanController extends Controller
             ]);
         }
 
-        $this->salesman->updateOrCreate($this->request->all(), $id);
+        try {
+            $this->salesman->updateOrCreate($this->request->all(), $id);
+        } catch (\Exception $e) {
+            return response($e->getMessage());
+        }
 
         return redirect()->route('salesman_list_simple');
     }

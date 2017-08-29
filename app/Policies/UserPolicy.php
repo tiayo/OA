@@ -28,4 +28,9 @@ class UserPolicy
     {
         return $user['name'] === config('site.admin_name');
     }
+
+    public function manage($user)
+    {
+        return $user['type'] == 1 || $user['type'] == 2;
+    }
 }

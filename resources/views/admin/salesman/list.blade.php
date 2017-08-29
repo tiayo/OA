@@ -50,8 +50,8 @@
                                     业务员
                                     @elseif($user['type'] == 1)
                                     管理员
-                                    @else
-                                    未知
+                                    @elseif($user['type'] == 2)
+                                    负责人
                                 @endif
                             </td>
                             <td>{{ $user['created_at'] }}</td>

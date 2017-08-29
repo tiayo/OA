@@ -3,6 +3,8 @@
 namespace App\Services\Admin;
 
 use App\Repositories\UsersRepository;
+use App\User;
+use Illuminate\Support\Facades\Auth;
 
 class SalesmanService
 {
@@ -20,7 +22,7 @@ class SalesmanService
      */
     public function get($page, $num, $keyword = null)
     {
-        return $this->user->get($page, $num, $keyword);
+        return $this->user->get($page, $num);
     }
 
     /**
@@ -64,11 +66,21 @@ class SalesmanService
      */
     public function updateOrCreate($post, $id = null)
     {
+        //添加负责人时执行权限验证
+        if ($post['type'] != 0 && !Auth::user()->can('admin', User::class)) {
+            throw new \Exception('没有权限创建负责人账号');
+        }
+
         $add['name'] = $post['name'];
 
         $add['email'] = $post['email'];
 
-        $add['type'] = 0;
+        $add['type'] = $post['type'];
+
+        //创建时指定父级
+        if (empty($id)) {
+            $add['parent_id'] = Auth::id();
+        }
 
         //密码
         if (isset($post['password'])) {

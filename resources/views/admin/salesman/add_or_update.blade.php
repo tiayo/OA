@@ -40,6 +40,26 @@
                         </div>
                     </div>
                     <div class="form-group">
+                        <label for="type" class="col-sm-2 col-sm-2 control-label">业务员邮箱</label>
+                        <div class="col-sm-3">
+                            <select class="form-control" id="type" name="type">
+                                @if(!empty($old_input['type']))
+                                    <option value="{{ $old_input['type'] }}">
+                                        @if($old_input['type'] == 0)业务员
+                                        @elseif($old_input['type'] == 2)负责人
+                                        @endif
+                                    </option>
+                                @endif
+
+                                   <option value="0">业务员</option>
+
+                                @if(Auth::user()->can('admin', \App\User::class))
+                                    <option value="2">负责人</option>
+                                @endif
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
                         <label for="email" class="col-sm-2 col-sm-2 control-label">业务员邮箱</label>
                         <div class="col-sm-3">
                             <input type="email" class="form-control" id="email" name="email" value="{{ $old_input['email'] or null}}">
