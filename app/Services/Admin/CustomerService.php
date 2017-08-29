@@ -87,7 +87,7 @@ class CustomerService
         $add['salesman_id'] = $post['salesman_id'];
         $add['name'] = $post['name'];
         $add['phone'] = $post['phone'];
-        $add['email'] = $post['email'] ?? 0;
+        $add['wx'] = $post['wx'];
         $add['company'] = $post['company'];
         $add['remark'] = $post['remark'] ?? null;
 
@@ -119,14 +119,14 @@ class CustomerService
      * @return bool
      * @throws \Exception
      */
-    public function unique($post)
+    public function unique($post, $id = null)
     {
         //正向搜索
-        $result = $this->customer->unique($post);
+        $result = $this->customer->unique($post, $id);
 
         //反向搜索
         if (empty($result)) {
-            $result = $this->customer->reverseUnique($post);
+            $result = $this->customer->reverseUnique($post, $id);
         }
 
         if (!empty($result)) {
@@ -135,6 +135,7 @@ class CustomerService
                 '姓名：'.$result['name']."\r\n".
                 '电话：'.$result['phone']."\r\n".
                 '公司:'.$result['company']."\r\n".
+                '微信:'.$result['wx']."\r\n".
                 '请核对！'
             );
         }

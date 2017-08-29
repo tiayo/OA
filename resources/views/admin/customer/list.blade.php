@@ -32,6 +32,7 @@
 		                <tr>
 		                    <th>ID</th>
 		                    <th>姓名</th>
+                            <th>微信</th>
                             <th>手机</th>
                             <th>公司</th>
                             <th>备注</th>
@@ -45,6 +46,7 @@
                         <tr>
                             <td>{{ $customer['id'] }}</td>
                             <td>{{ $customer['name'] }}</td>
+                            <td>{{ $customer['wx'] }}</td>
                             <td>{{ $customer['phone'] }}</td>
                             <td>{{ $customer['company'] }}</td>
                             <td>{{ $customer['remark'] }}</td>

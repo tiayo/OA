@@ -41,6 +41,12 @@
                         </div>
                     </div>
                     <div class="form-group">
+                        <label for="wx" class="col-sm-2 col-sm-2 control-label">客户微信</label>
+                        <div class="col-sm-3">
+                            <input type="text" class="form-control" id="wx" name="wx" value="{{ $old_input['wx'] or null}}">
+                        </div>
+                    </div>
+                    <div class="form-group">
                         <label for="phone" class="col-sm-2 col-sm-2 control-label">客户电话</label>
                         <div class="col-sm-3">
                             <input type="text" class="form-control" id="phone" name="phone" value="{{ $old_input['phone'] or null}}">

@@ -105,34 +105,26 @@ class CustomerController extends Controller
      */
     public function post($id = null)
     {
+        //初步验证
         $this->validate($this->request, [
             'salesman_id' => 'required|integer',
             'name' => 'required',
             'phone' => 'required',
             'company' => 'required',
-            'email' => 'email',
         ]);
 
-        if (empty($id)) {
-
-            //验证唯一性
-            try {
-                $this->customer->unique($this->request->all());
-            } catch (\Exception $e) {
-                return redirect()
-                    ->back()
-                    ->withInput($this->request->all())
-                    ->withErrors($e->getMessage());
-            }
-
-            //执行添加操作
-            $this->customer->updateOrCreate($this->request->all());
-
-        } else {
-
-            //执行更新操作
-            $this->customer->updateOrCreate($this->request->all(), $id);
+        //验证唯一性
+        try {
+            $this->customer->unique($this->request->all(), $id);
+        } catch (\Exception $e) {
+            return redirect()
+                ->back()
+                ->withInput($this->request->all())
+                ->withErrors($e->getMessage());
         }
+
+        //执行更新操作
+        $this->customer->updateOrCreate($this->request->all(), $id);
 
         return redirect()->route('customer_list_simple');
     }

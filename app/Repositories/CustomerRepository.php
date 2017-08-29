@@ -135,18 +135,24 @@ class CustomerRepository
             ->delete();
     }
 
-    public function unique($post)
+    public function unique($post, $id = 0)
     {
         return $this->customer
-            ->where('name', 'like', '%'.$post['name'].'%')
-            ->orWhere('phone', 'like', '%'.$post['phone'].'%')
-            ->orWhere('company', 'like', '%'.$post['company'].'%')
+            ->where('id', '<>', $id)
+            ->where(function ($query) use($post) {
+                $query->where('name', 'like', '%'.$post['name'].'%')
+                    ->orWhere('phone', 'like', '%'.$post['phone'].'%')
+                    ->orWhere('company', 'like', '%'.$post['company'].'%')
+                    ->orWhere('wx', $post['wx']);
+            })
             ->first();
     }
 
-    public function reverseUnique($post)
+    public function reverseUnique($post, $id = 0)
     {
-        $this->customer->chunk(50, function ($customers) use ($post) {
+        $this->customer
+            ->where('id', '<>', $id)
+            ->chunk(50, function ($customers) use ($post) {
             foreach ($customers as $customer) {
                 if (strpos($post['name'], $customer['name']) !== false) {
                     return $this->customer_chunk = $customer;
