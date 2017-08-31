@@ -35,6 +35,7 @@ class AdminSeeder extends Seeder
         return $this->user->create([
             'name' => 'admin',
             'email' => 'admin@admin.com',
+            'parent_id' => 0,
             'password' => bcrypt('123456'),
             'type' => 1
         ]);
