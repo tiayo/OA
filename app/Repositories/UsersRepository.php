@@ -170,10 +170,10 @@ class UsersRepository
     public function updateOrCreate($post, $id)
     {
         if (empty($id) && $id !== 0) {
-            return $this->user->create($post);
+            $this->user->create($post);
+        } else {
+            $this->user->where('id', $id)->update($post);
         }
-
-        $this->user->where('id', $id)->update($post);
 
         //删除redis缓存
         return $this->redis->redisMultiDelete('all_salesman');
