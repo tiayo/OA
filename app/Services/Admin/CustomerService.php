@@ -121,9 +121,9 @@ class CustomerService
         $result = $this->customer->unique($post, $id);
 
         //反向搜索
-        if (empty($result)) {
-            $result = $this->customer->reverseUnique($post, $id);
-        }
+        //if (empty($result)) {
+        //    $result = $this->customer->reverseUnique($post, $id);
+        //}
 
         if (!empty($result)) {
             throw new \Exception(

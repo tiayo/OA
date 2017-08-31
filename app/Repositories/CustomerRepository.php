@@ -201,9 +201,9 @@ class CustomerRepository
         return $this->customer
             ->where('id', '<>', $id)
             ->where(function ($query) use($post) {
-                $query->where('name', 'like', '%'.$post['name'].'%')
-                    ->orWhere('phone', 'like', '%'.$post['phone'].'%')
-                    ->orWhere('company', 'like', '%'.$post['company'].'%')
+                $query->where('name', $post['name'])
+                    ->orWhere('phone', $post['phone'])
+                    ->orWhere('company', $post['company'])
                     ->orWhere('wx', $post['wx']);
             })
             ->first();
