@@ -24,11 +24,11 @@ class CustomerService
      */
     public function get($page, $num, $keyword = null)
     {
-        if (Auth::user()->can('admin', User::class)) {
-            return $this->customer->adminGet($page, $num, $keyword);
+        if (!empty($keyword)) {
+            return $this->customer->getSearch($page, $num, $keyword);
         }
 
-        return $this->customer->get($page, $num, $keyword);
+        return $this->customer->get($page, $num);
     }
 
     /**
@@ -36,13 +36,9 @@ class CustomerService
      *
      * @return mixed
      */
-    public function countGet($keyword = null)
+    public function countGet()
     {
-        if (Auth::user()->can('admin', User::class)) {
-            return $this->customer->adminCountGet($keyword);
-        }
-
-        return $this->customer->countGet($keyword);
+        return $this->customer->countGet();
     }
 
     /**

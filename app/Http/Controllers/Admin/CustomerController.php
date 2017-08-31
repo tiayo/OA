@@ -34,6 +34,7 @@ class CustomerController extends Controller
             'current' =>  $page,
             'num' => $num,
             'count' => ceil($this->customer->countGet() / $num),
+            'sign' => 'list'
         ]);
     }
 
@@ -49,11 +50,12 @@ class CustomerController extends Controller
         $customers = $this->customer->get($page, $num, $keyword);
 
         return view('admin.customer.list', [
-            'customers' => $customers,
+            'customers' => $customers['data'],
             'page' => $page == 1 ? 2 : $page,
             'current' =>  $page,
             'num' => $num,
-            'count' => ceil($this->customer->countGet($keyword) / $num),
+            'count' => ceil($customers['count'] / $num),
+            'sign' => 'search'
         ]);
     }
 

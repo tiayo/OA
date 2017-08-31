@@ -19,26 +19,42 @@ class UsersRepository
 
     public function create($data)
     {
-        return $this->user->create($data);
+        $this->user->create($data);
+
+        return $this->redis->redisMultiDelete('all_salesman');
     }
 
+    /**
+     * 获取记录调度方法
+     *
+     * @param $page
+     * @param $num
+     * @return array
+     */
     public function get($page, $num)
     {
-        if (Auth::user()->can('admin', User::class)) {
-            return $this->user
-                ->where('type', '<>', 1)
-                ->orderBy('id', 'desc')
-                ->get()
-                ->toArray();
-        }
+        $all_salesman = $this->getValue();
 
+        return array_slice($all_salesman, ($page-1)*$num, $num);
+    }
+
+    /**
+     * 从redis获取缓存或写入缓存
+     *
+     * @return array|mixed
+     */
+    public function getValue()
+    {
         //从redis获取数据
         $all_salesman = $this->redis->redisSingleGet('all_salesman:'.Auth::id());
 
         //没有缓存
         if (empty($all_salesman)) {
-
-            $all_salesman = $this->getChildren(Auth::id());
+            if (Auth::user()->can('admin', User::class)) {
+                $all_salesman = $this->getAll();
+            } else {
+                $all_salesman = $this->getChildren(Auth::id());
+            }
 
             $this->redis->redisSingleAdd('all_salesman:'.Auth::id(), serialize($all_salesman), 1800);
         } else {
@@ -46,19 +62,43 @@ class UsersRepository
             $all_salesman = unserialize($all_salesman);
         }
 
-        return array_slice($all_salesman, ($page-1)*$num, $num);
-
+        return $all_salesman;
     }
 
-    public function getChildren($parent)
+    /**
+     * 获取下级
+     *
+     * @param $parent
+     * @param array ...$select
+     * @return mixed
+     */
+    public function getChildren($parent, ...$select)
     {
-        $all_children = $this->user
+        $select = !empty($select) ? $select : '*';
+
+        $all_children = $this->getAll($select);
+
+        if (isset($this->tree($all_children)[$parent])) {
+            return $this->tree($all_children)[$parent];
+        } else {
+            return [];
+        }
+    }
+
+    /**
+     * 获取所有非超级管理员用户
+     *
+     * @param string $select
+     * @return array
+     */
+    public function getAll($select = '*')
+    {
+        return $this->user
+            ->select($select)
             ->where('type', '<>', 1)
             ->orderBy('id', 'desc')
             ->get()
             ->toArray();
-
-        return $this->tree($all_children)[$parent];
     }
 
     /**
@@ -87,24 +127,32 @@ class UsersRepository
         return $childs;
     }
 
-    public function getSearch($keyword)
+    /**
+     * 获取搜索结果
+     *
+     * @param $page
+     * @param $num
+     * @param $keyword
+     * @return array
+     */
+    public function getSearch($page, $num, $keyword)
     {
-        return $this->user
-            ->where('type', 0)
-            ->where('')
-            ->where(function ($query) use ($keyword) {
-                $query->where('name', 'like', "%$keyword%")
-                    ->orwhere('email', 'like', "%$keyword%");
-            })
-            ->orderBy('id', 'desc')
-            ->first();
+        $all_salesman = $this->getValue();
+
+        $result = [];
+
+        foreach ($all_salesman as $salesman) {
+            if (strpos($salesman['name'], $keyword) !== false || strpos($salesman['email'], $keyword) !== false) {
+                $result[] = $salesman;
+            }
+        }
+
+        return ['data' => array_slice($result, ($page-1)*$num, $num), 'count' => count($result)];
     }
 
     public function countGet()
     {
-        return $this->user
-            ->where('type', 0)
-            ->count();
+        return count($this->getValue());
     }
     
     public function first($id)
@@ -128,13 +176,16 @@ class UsersRepository
         $this->user->where('id', $id)->update($post);
 
         //删除redis缓存
-        return $this->redis->redisSingleDelete('all_salesman:'.Auth::id());
+        return $this->redis->redisMultiDelete('all_salesman');
     }
 
     public function destroy($id)
     {
-        return $this->user
+        $this->user
             ->where('id', $id)
             ->delete();
+
+        //删除redis缓存
+        return $this->redis->redisMultiDelete('all_salesman');
     }
 }

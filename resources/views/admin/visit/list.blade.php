@@ -36,9 +36,7 @@
                             <th>客户</th>
                             <th>记录</th>
                             <th>添加时间</th>
-                            @if($auth = Auth::user()->can('admin', \App\User::class))
-							    <th>操作</th>
-                            @endif
+                            <th>操作</th>
 		                </tr>
 		            </thead>
 
@@ -50,13 +48,13 @@
                             <td>{{ $list['customer_name'] }}</td>
                             <td>{{ $list['record'] }}</td>
                             <td>{{ $list['created_at'] }}</td>
-                            @if($auth)
-                                <td>
+                            <td>
+                                @if($auth = Auth::user()->can('control', \App\Visit::find($list['id'])))
                                     <button class="btn btn-info" type="button" onclick="location='{{ route('visit_update', ['id' => $list['id'] ]) }}'">编辑</button>
                                     <button class="btn btn-danger" type="button" onclick="javascript:if(confirm('确实要删除吗?'))location='{{ route('visit_destroy', ['id' => $list['id'] ]) }}'">删除</button>
-
-                                </td>
-                            @endif
+                                    @else 无权限
+                                @endif
+                            </td>
                         </tr>
                         @endforeach
                     </tbody>
@@ -72,17 +70,25 @@
 
 @section('script')
     @parent
-    <script type="text/javascript">
-        $(function(){
-            $(".pagination").createPage({
-                totalPage:{{ $count }},
-                currPage:{{ $current }},
-                url:"{{ route('customer_list_simple') }}",
-                backFn:function(p){
-                    console.log("回调函数："+p);
-                }
+    @if(!empty($page))
+        <script type="text/javascript">
+            $(function(){
+                $(".pagination").createPage({
+                    totalPage:{{ $count }},
+                    currPage:{{ $current }},
+                    @if($sign == 'search')
+                        url:"{{ route('visit_search_simple') }}",
+                        keyword:"{{ Request::route('keyword') }}",
+                    @else
+                        url:"{{ route('visit_list_simple') }}",
+                    @endif
+                });
             });
-        });
-    </script>
-    <script src="{{ asset('style/js/paging.js') }}"></script>
+        </script>
+        @if($sign == 'search')
+            <script src="{{ asset('style/js/pagingSearch.js') }}"></script>
+        @else
+            <script src="{{ asset('style/js/paging.js') }}"></script>
+        @endif
+    @endif
 @endsection

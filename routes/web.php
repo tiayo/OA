@@ -34,7 +34,12 @@ Route::group(['namespace' => 'Admin', 'prefix' => 'admin'], function () {
             Route::get('/salesman/update/{id}', 'SalesmanController@updateView')->name('salesman_update');
             Route::post('/salesman/update/{id}', 'SalesmanController@post');
             Route::get('/salesman/destroy/{id}', 'SalesmanController@destroy')->name('salesman_destroy');
-            Route::get('/salesman/search', 'SalesmanController@search')->name('salesman_search');
+
+            //搜索
+            Route::get('/salesman/search', function () {
+                return redirect()->route('salesman_search', ['page' => 1, 'keyword' => '']);
+            })->name('salesman_search_simple');
+            Route::get('/salesman/search/{page}/{keyword}', 'SalesmanController@search')->name('salesman_search');
 
             //修改客户回访信息
             Route::get('/visit/update/{id}', 'VisitController@updateView')->name('visit_update');
@@ -64,7 +69,7 @@ Route::group(['namespace' => 'Admin', 'prefix' => 'admin'], function () {
 
         //搜索客户
         Route::get('/customer/search', function () {
-            return redirect()->route('customer_search', ['page' => 1, 'keyword' => Request::get('keyword')]);
+            return redirect()->route('customer_search', ['page' => 1, 'keyword' => '']);
         })->name('customer_search_simple');
         Route::get('/customer/search/{page}/{keyword}', 'CustomerController@search')->name('customer_search');
 
@@ -80,7 +85,7 @@ Route::group(['namespace' => 'Admin', 'prefix' => 'admin'], function () {
 
         //搜索客户回访记录
         Route::get('/visit/search', function () {
-            return redirect()->route('visit_search', ['page' => 1, 'keyword' => Request::get('keyword')]);
+            return redirect()->route('visit_search', ['page' => 1, 'keyword' => '']);
         })->name('visit_search_simple');
         Route::get('/visit/search/{page}/{keyword}', 'VisitController@search')->name('visit_search');
     });

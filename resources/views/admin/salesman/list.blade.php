@@ -16,13 +16,13 @@
     <div class="col-md-12">
 		<section class="panel">
             <div class="panel-body">
-                <form class="form-inline" method="get" action="{{ route('salesman_search') }}">
+                <form class="form-inline" id="salesman_form">
                     <div class="form-group">
                         <label class="sr-only" for="search"></label>
                         <input type="text" class="form-control" id="search" name="keyword"
                                value="{{ Request::get('keyword') }}" placeholder="输入姓名或邮箱" required>
                     </div>
-                    <button type="submit" class="btn btn-primary">搜索</button>
+                    <button type="submit" class="btn btn-primary" id="salesman_search">搜索</button>
                 </form>
             <header class="panel-heading">
                	业务员列表
@@ -79,16 +79,34 @@
     @if(!empty($page))
         <script type="text/javascript">
             $(function(){
+
+                $('#salesman_form').submit(function () {
+                    var keyword = $('#search').val();
+
+                    window.location='{{ route('salesman_search', ['page' => 1, 'keyword' => '']) }}/'+keyword;
+
+                    return false;
+                });
+
                 $(".pagination").createPage({
                     totalPage:{{ $count }},
                     currPage:{{ $current }},
-                    url:"{{ route('salesman_list_simple') }}",
+                    @if($sign == 'search')
+                        url:"{{ route('salesman_search_simple') }}",
+                        keyword:"{{ Request::route('keyword') }}",
+                    @else
+                        url:"{{ route('salesman_list_simple') }}",
+                    @endif
                     backFn:function(p){
                         console.log("回调函数："+p);
                     }
                 });
             });
         </script>
-        <script src="{{ asset('style/js/paging.js') }}"></script>
+        @if($sign == 'search')
+            <script src="{{ asset('style/js/pagingSearch.js') }}"></script>
+            @else
+            <script src="{{ asset('style/js/paging.js') }}"></script>
+        @endif
     @endif
 @endsection

@@ -2,7 +2,7 @@
 
 namespace App\Policies;
 
-use App\User;
+use App\Repositories\UsersRepository;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Support\Facades\Auth;
 
@@ -10,14 +10,11 @@ class CustomerPolicy
 {
     use HandlesAuthorization;
 
-    /**
-     * Create a new policy instance.
-     *
-     * @return bool
-     */
-    public function __construct()
+    protected $salesman;
+
+    public function __construct(UsersRepository $salesman)
     {
-        
+        $this->salesman = $salesman;
     }
 
     /**
@@ -41,10 +38,25 @@ class CustomerPolicy
      */
     public function control($user, $customer)
     {
+        //跳过超级管理员
         if ($this->admin($user)) {
             return true;
         }
 
-        return $user['id'] === $customer['salesman_id'];
+        //自己的客户
+        if ($user['id'] == $customer['salesman_id']) {
+            return true;
+        }
+
+        //负责人鉴权
+        $all_children = $this->salesman->getChildren(Auth::id(), 'id', 'parent_id');
+
+        foreach ($all_children as $child) {
+            if ($customer['salesman_id'] == $child['id']) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

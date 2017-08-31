@@ -26,11 +26,11 @@ class VisitService
      */
     public function get($page, $num, $keyword = null)
     {
-        if (Auth::user()->can('admin', User::class)) {
-            return $this->visit->adminGet($page, $num, $keyword);
+        if (!empty($keyword)) {
+            return $this->visit->getSearch($page, $num, $keyword);
         }
 
-        return $this->visit->get($page, $num, $keyword);
+        return $this->visit->get($page, $num);
     }
 
     /**
@@ -38,13 +38,9 @@ class VisitService
      *
      * @return mixed
      */
-    public function countGet($keyword = null)
+    public function countGet()
     {
-        if (Auth::user()->can('admin', User::class)) {
-            return $this->visit->adminCountGet($keyword);
-        }
-
-        return $this->visit->countGet($keyword);
+        return $this->visit->countGet();
     }
 
     /**
@@ -56,14 +52,7 @@ class VisitService
     public function first($id)
     {
         //获取当前客户
-        $visit = $this->visit->first($id);
-
-        //验证操作权限
-        if (Auth::user()->can('control', $visit)) {
-            return $visit;
-        }
-
-        throw new \Exception('不是您的客户！');
+        return $this->visit->first($id);
     }
 
     /**

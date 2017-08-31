@@ -15,6 +15,8 @@ class SalesmanController extends Controller
 
     public function __construct(SalesmanService $salesman, Request $request)
     {
+        $this->middleware('salesman_control');
+
         $this->salesman = $salesman;
         $this->request = $request;
     }
@@ -36,6 +38,29 @@ class SalesmanController extends Controller
             'current' =>  $page,
             'num' => $num,
             'count' => ceil($this->salesman->countGet() / $num),
+            'sign' => 'list',
+        ]);
+    }
+
+    /**
+     * 搜索记录
+     * #因为姓名邮箱都唯一，所以这里只获取一条
+     *
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     */
+    public function search($page, $keyword)
+    {
+        $num = config('site.list_num');
+
+        $salesman = $this->salesman->get($page, $num, $keyword);
+
+        return view('admin.salesman.list', [
+            'salesman' => $salesman['data'],
+            'page' => $page == 1 ? 2 : $page,
+            'current' =>  $page,
+            'num' => $num,
+            'count' => ceil($salesman['count'] / $num),
+            'sign' => 'search',
         ]);
     }
 
@@ -60,7 +85,11 @@ class SalesmanController extends Controller
      */
     public function updateView($id)
     {
-        $old_input = $this->request->session()->has('_old_input') ? session('_old_input') : $this->salesman->first($id);
+        try {
+            $old_input = $this->request->session()->has('_old_input') ? session('_old_input') : $this->salesman->first($id);
+        } catch (\Exception $e) {
+            return response($e->getMessage());
+        }
 
         return view('admin.salesman.add_or_update', [
             'old_input' => $old_input,
@@ -115,22 +144,5 @@ class SalesmanController extends Controller
         }
 
         return redirect()->route('salesman_list');
-    }
-
-    /**
-     * 搜索记录
-     * #因为姓名邮箱都唯一，所以这里只获取一条
-     *
-     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
-     */
-    public function search()
-    {
-        $keyword = $this->request->get('keyword');
-
-        $salesman = $this->salesman->get(1, 1, $keyword);
-
-        return view('admin.salesman.list', [
-            'salesman' => [$salesman],
-        ]);
     }
 }

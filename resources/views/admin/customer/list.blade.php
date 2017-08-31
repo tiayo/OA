@@ -16,7 +16,7 @@
     <div class="col-md-12">
 		<section class="panel">
             <div class="panel-body">
-                <form class="form-inline" method="get" action="{{ route('customer_search_simple') }}">
+                <form class="form-inline" id="customer_form">
                     <div class="form-group">
                         <label class="sr-only" for="search"></label>
                         <input type="text" class="form-control" id="search" name="keyword"
@@ -32,6 +32,7 @@
 		                <tr>
 		                    <th>ID</th>
 		                    <th>姓名</th>
+                            <th>业务员</th>
                             <th>微信</th>
                             <th>手机</th>
                             <th>公司</th>
@@ -46,6 +47,7 @@
                         <tr>
                             <td>{{ $customer['id'] }}</td>
                             <td>{{ $customer['name'] }}</td>
+                            <td>{{ $customer['salesman_name'] }}</td>
                             <td>{{ $customer['wx'] }}</td>
                             <td>{{ $customer['phone'] }}</td>
                             <td>{{ $customer['company'] }}</td>
@@ -72,15 +74,50 @@
     @parent
     <script type="text/javascript">
         $(function(){
-            $(".pagination").createPage({
-                totalPage:{{ $count }},
-                currPage:{{ $current }},
-                url:"{{ route('customer_list_simple') }}",
-                backFn:function(p){
-                    console.log("回调函数："+p);
-                }
+            $(function(){
+
+                $('#customer_form').submit(function () {
+                    var keyword = $('#search').val();
+
+                    if (stripscript(keyword) == '') {
+                        $('#search').val('');
+                        return false;
+                    }
+
+                    window.location='{{ route('customer_search', ['page' => 1, 'keyword' => '']) }}/' + stripscript(keyword);
+
+                    return false;
+                });
+
+                $(".pagination").createPage({
+                    totalPage:{{ $count }},
+                    currPage:{{ $current }},
+                    @if($sign == 'search')
+                    url:"{{ route('customer_search_simple') }}",
+                    keyword:"{{ Request::route('keyword') }}",
+                    @else
+                    url:"{{ route('customer_list_simple') }}",
+                    @endif
+                    backFn:function(p){
+                        console.log("回调函数："+p);
+                    }
+                });
             });
         });
+
+        function stripscript(s)
+        {
+            var pattern = new RegExp("[`~!@#$^&*()=|{}':;',\\[\\].<>/?~！@#￥……&*（）——|{}【】‘；：”“'。，、？]");
+            var rs = "";
+            for (var i = 0; i < s.length; i++) {
+                rs = rs+s.substr(i, 1).replace(pattern, '');
+            }
+            return rs;
+        }
     </script>
-    <script src="{{ asset('style/js/paging.js') }}"></script>
+    @if($sign == 'search')
+        <script src="{{ asset('style/js/pagingSearch.js') }}"></script>
+    @else
+        <script src="{{ asset('style/js/paging.js') }}"></script>
+    @endif
 @endsection

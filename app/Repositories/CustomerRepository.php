@@ -3,106 +3,161 @@
 namespace App\Repositories;
 
 use App\Customer;
+use App\Services\RedisServiceInterface;
+use App\User;
 use Illuminate\Support\Facades\Auth;
 
 class CustomerRepository
 {
     protected $customer;
     protected $customer_chunk;
+    protected $salesman;
+    protected $redis;
 
-    public function __construct(Customer $customer)
+    public function __construct(Customer $customer, UsersRepository $salesman, RedisServiceInterface $redis)
     {
         $this->customer = $customer;
+        $this->salesman = $salesman;
+        $this->redis = $redis;
     }
 
     public function create($data)
     {
-        return $this->customer->create($data);
+        $this->customer->create($data);
+
+        //删除redis缓存
+        return $this->redis->redisMultiDelete('all_customer');
     }
     
-    public function get($page, $num, $keyword = null)
+    public function get($page, $num)
     {
-        if (!empty($keyword)) {
-            return $this->customer
-                ->where('salesman_id', Auth::id())
-                ->where(function ($query) use ($keyword) {
-                    $query->where('name', 'like', "%$keyword%")
-                        ->orwhere('email', 'like', "%$keyword%")
-                        ->orwhere('phone', 'like', "%$keyword%")
-                        ->orwhere('company', 'like', "%$keyword%");
-                })
-                ->skip(($page-1) * $num)
-                ->take($num)
-                ->orderBy('id', 'desc')
-                ->get();
+        $customers = $this->getValue();
+
+        return array_slice($customers, ($page-1)*$num, $num);
+    }
+
+    /**
+     * 获取负责人及下级业务员的所有客户
+     *
+     * @return array
+     */
+    public function getValue()
+    {
+        //读redis缓存
+        $redis = $this->redis->redisSingleGet('all_customer:'.Auth::id());
+
+        if (empty($redis))
+        {
+            //初始化
+            $redis = [];
+
+            //超级管理员获取全部
+            if (Auth::user()->can('admin', User::class))
+            {
+                $redis = $this->getAll();
+            } else {
+                //初始化
+                $result = [];
+
+                //加入下级
+                $salesmans = $this->salesman->getChildren(Auth::id(), 'id', 'parent_id');
+
+                //加入自己
+                $salesmans[] = ['id' => Auth::id()];
+
+                //获取所有客户
+                foreach ($salesmans as $salesman) {
+
+                    //获取单个业务员的客户
+                    $data = $this->getCustomerBysalesmanId($salesman['id']);
+
+                    empty($data) ? : $result[] = $data;
+                }
+
+                //整理格式
+                foreach ($result as $value) {
+                    foreach ($value as $item) {
+                        $redis[] =  $item;
+                    }
+                }
+            }
+
+            //写入redis
+            $this->redis->redisSingleAdd('all_customer:'.Auth::id(), serialize($redis), 1800);
+
+            return $redis;
         }
 
+        return unserialize($redis);
+    }
+
+    /**
+     * 获取单个业务员客户
+     *
+     * @param $salesman_id
+     * @return array
+     */
+    public function getCustomerBysalesmanId($salesman_id)
+    {
         return $this->customer
-            ->where('salesman_id', Auth::id())
-            ->skip(($page-1) * $num)
-            ->take($num)
+            ->select('customers.*', 'users.name as salesman_name')
+            ->join('users', 'customers.salesman_id', 'users.id')
+            ->where('salesman_id', $salesman_id)
+            ->get()
+            ->toArray();
+    }
+
+    /**
+     * 获取所有客户
+     *
+     * @return array
+     */
+    public function getAll()
+    {
+        return $this->customer
+            ->select('customers.*', 'users.name as salesman_name')
+            ->join('users', 'customers.salesman_id', 'users.id')
             ->orderBy('id', 'desc')
-            ->get();
+            ->get()
+            ->toArray();
     }
 
-    public function AdminGet($page, $num, $keyword = null)
+    /**
+     * 获取客户数量
+     *
+     * @return int
+     */
+    public function countGet()
     {
-        if (!empty($keyword)) {
-            return $this->customer
-                ->where(function ($query) use ($keyword) {
-                    $query->where('name', 'like', "%$keyword%")
-                        ->orwhere('email', 'like', "%$keyword%")
-                        ->orwhere('phone', 'like', "%$keyword%")
-                        ->orwhere('company', 'like', "%$keyword%");
-                })
-                ->skip(($page-1) * $num)
-                ->take($num)
-                ->orderBy('id', 'desc')
-                ->get();
-        }
-
-        return $this->customer
-            ->skip(($page-1) * $num)
-            ->take($num)
-            ->orderBy('id', 'desc')
-            ->get();
+        return count($this->getValue());
     }
 
-    public function countGet($keyword = null)
+    /**
+     * 获取搜索结果
+     *
+     * @param $page
+     * @param $num
+     * @param $keyword
+     * @return array
+     */
+    public function getSearch($page, $num, $keyword)
     {
-        if (!empty($keyword)) {
-            return $this->customer
-                ->where('salesman_id', Auth::id())
-                ->where(function ($query) use ($keyword) {
-                    $query->where('name', 'like', "%$keyword%")
-                        ->orwhere('email', 'like', "%$keyword%")
-                        ->orwhere('phone', 'like', "%$keyword%")
-                        ->orwhere('company', 'like', "%$keyword%");
-                })
-                ->count();
+        $customers = $this->getValue();
+
+        $result = [];
+
+        foreach ($customers as $salesman) {
+            if (
+                strpos($salesman['name'], $keyword) !== false ||
+                strpos($salesman['phone'], $keyword) !== false ||
+                strpos($salesman['company'], $keyword) !== false ||
+                strpos($salesman['wx'], $keyword) !== false
+            ) {
+                $result[] = $salesman;
+            }
         }
 
-        return $this->customer
-            ->where('salesman_id', Auth::id())
-            ->count();
-    }
-
-    public function AdminCountGet($keyword = null)
-    {
-
-        if (!empty($keyword)) {
-            return $this->customer
-                ->where(function ($query) use ($keyword) {
-                    $query->where('name', 'like', "%$keyword%")
-                        ->orwhere('email', 'like', "%$keyword%")
-                        ->orwhere('phone', 'like', "%$keyword%")
-                        ->orwhere('company', 'like', "%$keyword%");
-                })
-                ->count();
-        }
-
-        return $this->customer
-            ->count();
+        return ['data' => array_slice($result, ($page-1)*$num, $num), 'count' => count($result)];
     }
     
     public function first($id)
@@ -120,19 +175,25 @@ class CustomerRepository
     public function updateOrCreate($post, $id)
     {
         if (empty($id) && $id !== 0) {
-            return $this->customer->create($post);
+            $this->customer->create($post);
+        } else {
+            $this->customer
+                ->where('id', $id)
+                ->update($post);
         }
 
-        return $this->customer
-            ->where('id', $id)
-            ->update($post);
+        //删除redis缓存
+        return $this->redis->redisMultiDelete('all_customer');
     }
 
     public function destroy($id)
     {
-        return $this->customer
+        $this->customer
             ->where('id', $id)
             ->delete();
+
+        //删除redis缓存
+        return $this->redis->redisMultiDelete('all_customer');
     }
 
     public function unique($post, $id = 0)
@@ -148,7 +209,7 @@ class CustomerRepository
             ->first();
     }
 
-    public function reverseUnique($post, $id = 0)
+    public function reverseUnique($post, $id = null)
     {
         $this->customer
             ->where('id', '<>', $id)

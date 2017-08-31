@@ -12,11 +12,11 @@
                 totalsubpageTmep = "<p style='float: right;margin: 0.35em 0 0 1em;'>共有"+args.totalPage+"页，当前第"+args.currPage+"页</p>";
                 // 页码大于等于4的时候，添加第一个页码元素
                 if(args.currPage!=1 && args.currPage>=4 && args.totalPage!=4) {
-                    totalsubpageTmep += "<li class='ali'><a href='"+args.url+"/1' class='geraltTb_pager' data-go='' >"+1+"</a></li>";
+                    totalsubpageTmep += "<li class='ali'><a href='"+args.url+"/1/"+args.keyword+"' class='geraltTb_pager' data-go='' >"+1+"</a></li>";
                 }
                 /* 当前页码>4, 并且<=总页码，总页码>5，添加“···”*/
                 if(args.currPage-2>2 && args.currPage<=args.totalPage && args.totalPage>5) {
-                    totalsubpageTmep += "<li class='ali'><a href='"+args.url+"/1' class='geraltTb_' data-go='' >...</a></li>";
+                    totalsubpageTmep += "<li class='ali'><a href='"+args.url+"/1/"+args.keyword+"' class='geraltTb_' data-go='' >...</a></li>";
                 }
                 /* 当前页码的前两页 */
                 var start = args.currPage-2;
@@ -32,18 +32,18 @@
                 for(; start<=end; start++) {
                     if(start<=args.totalPage && start>=1) {
                         if (start === args.currPage) {
-                            totalsubpageTmep += "<li class='ali active'><a href='"+args.url+"/"+start+"' class='geraltTb_pager' data-go='' >"+start+"</a></li>";
+                            totalsubpageTmep += "<li class='ali active'><a href='"+args.url+"/"+start+"/"+args.keyword+"' class='geraltTb_pager' data-go='' >"+start+"</a></li>";
                         } else {
-                            totalsubpageTmep += "<li class='ali'><a href='"+args.url+"/"+start+"' class='geraltTb_pager' data-go='' >"+start+"</a></li>";
+                            totalsubpageTmep += "<li class='ali'><a href='"+args.url+"/"+start+"/"+args.keyword+"' class='geraltTb_pager' data-go='' >"+start+"</a></li>";
                         }
                     }
                 }
                 if(args.currPage+2<args.totalPage-1 && args.currPage>=1 && args.totalPage>5) {
-                    totalsubpageTmep += "<li class='ali'><a href='"+args.url+"/"+(end+1)+"' class='geraltTb_' data-go='' >...</a></li>";
+                    totalsubpageTmep += "<li class='ali'><a href='"+args.url+"/"+(end+1)+"/"+args.keyword+"' class='geraltTb_' data-go='' >...</a></li>";
                 }
 
                 if(args.currPage!=args.totalPage && args.currPage<args.totalPage-2 && args.totalPage!=4) {
-                    totalsubpageTmep += "<li class='ali'><a href='"+args.url+"/"+args.totalPage+"' class='geraltTb_pager' data-go='' >"+args.totalPage+"</a></li>";
+                    totalsubpageTmep += "<li class='ali'><a href='"+args.url+"/"+args.totalPage+"/"+args.keyword+"' class='geraltTb_pager' data-go='' >"+args.totalPage+"</a></li>";
                 }
                 $(".pagination").html(totalsubpageTmep);
             })();

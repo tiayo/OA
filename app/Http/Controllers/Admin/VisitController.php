@@ -15,6 +15,8 @@ class VisitController extends Controller
 
     public function __construct(VisitService $visit, Request $request, CustomerService $customer)
     {
+        $this->middleware('visit_control');
+
         $this->visit = $visit;
         $this->request = $request;
         $this->customer = $customer;
@@ -40,6 +42,7 @@ class VisitController extends Controller
             'num' => $num,
             'count' => ceil($this->visit->countGet() / $num),
             'customers' => $customers,
+            'sign' => 'list',
         ]);
     }
 
@@ -57,12 +60,13 @@ class VisitController extends Controller
         $customers = $this->customer->get(1, 10000);
 
         return view('admin.visit.list', [
-            'lists' => $lists,
+            'lists' => $lists['data'],
             'page' => $page == 1 ? 2 : $page,
             'current' =>  $page,
             'num' => $num,
-            'count' => ceil($this->visit->countGet($keyword) / $num),
+            'count' => ceil($lists['count'] / $num),
             'customers' => $customers,
+            'sign' => 'search',
         ]);
     }
 
@@ -98,11 +102,7 @@ class VisitController extends Controller
 
         if (empty($old_input)) {
             //从数据库获取
-            try {
-                $old_input = $this->visit->first($id);
-            } catch (\Exception $e) {
-                return response($e->getMessage(), 403);
-            }
+            $old_input = $this->visit->first($id);
         }
 
         return view('admin.visit.add_or_update', [

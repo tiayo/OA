@@ -2,84 +2,155 @@
 
 namespace App\Repositories;
 
+use App\Services\RedisServiceInterface;
+use App\User;
 use App\Visit;
 use Illuminate\Support\Facades\Auth;
 
 class VisitRepository
 {
     protected $visit;
+    protected $salesman;
+    protected $redis;
+    protected $visit_chunk;
 
-    public function __construct(Visit $visit)
+    public function __construct(Visit $visit, UsersRepository $salesman, RedisServiceInterface $redis)
     {
         $this->visit = $visit;
+        $this->salesman = $salesman;
+        $this->redis = $redis;
     }
 
     public function create($data)
     {
-        return $this->visit->create($data);
+        $this->visit->create($data);
+
+        //删除redis缓存
+        return $this->redis->redisMultiDelete('all_visit');
     }
 
-    public function get($page, $num, $keyword = null)
+    public function get($page, $num)
     {
-        if (!empty($keyword)) {
-            return $this->visit
-                ->where('visits.salesman_id', Auth::id())
-                ->where('visits.customer_id', $keyword)
-                ->join('users', 'visits.salesman_id', 'users.id')
-                ->join('customers', 'visits.customer_id', 'customers.id')
-                ->select('visits.*', 'users.name as salesman_name', 'customers.name as customer_name')
-                ->skip(($page-1) * $num)
-                ->take($num)
-                ->orderBy('id', 'desc')
-                ->get();
+        $visits = $this->getValue();
+
+        return array_slice($visits, ($page-1)*$num, $num);
+    }
+
+    /**
+     * 获取搜索结果
+     *
+     * @param $page
+     * @param $num
+     * @param $keyword
+     * @return array
+     */
+    public function getSearch($page, $num, $keyword)
+    {
+        $visits = $this->getValue();
+
+        $result = [];
+
+        foreach ($visits as $visit) {
+            if ($visit['customer_id']== $keyword) {
+                $result[] = $visit;
+            }
         }
 
+        return ['data' => array_slice($result, ($page-1)*$num, $num), 'count' => count($result)];
+    }
+
+    /**
+     * 获取负责人及下级业务员的所有客户
+     *
+     * @return array
+     */
+    public function getValue()
+    {
+        //读redis缓存
+        $redis = $this->redis->redisSingleGet('all_visit:'.Auth::id());
+
+        if (empty($redis))
+        {
+            //初始化
+            $redis = [];
+
+            //超级管理员获取全部
+            if (Auth::user()->can('admin', User::class))
+            {
+                $redis = $this->getAll();
+            } else {
+                //初始化
+                $result = [];
+
+                //加入下级
+                $salesmans = $this->salesman->getChildren(Auth::id(), 'id', 'parent_id');
+
+                //加入自己
+                $salesmans[] = ['id' => Auth::id()];
+
+                //获取所有客户
+                foreach ($salesmans as $salesman) {
+
+                    //获取单个业务员的客户
+                    $data = $this->getVisitBysalesmanId($salesman['id']);
+
+                    empty($data) ? : $result[] = $data;
+                }
+
+                //整理格式
+                foreach ($result as $value) {
+                    foreach ($value as $item) {
+                        $redis[] =  $item;
+                    }
+                }
+            }
+
+            //写入redis
+            $this->redis->redisSingleAdd('all_visit:'.Auth::id(), serialize($redis), 1800);
+
+            return $redis;
+        }
+
+        return unserialize($redis);
+    }
+
+    /**
+     * 获取所有客户
+     *
+     * @return array
+     */
+    public function getAll()
+    {
         return $this->visit
-            ->where('visits.salesman_id', Auth::id())
             ->join('users', 'visits.salesman_id', 'users.id')
             ->join('customers', 'visits.customer_id', 'customers.id')
             ->select('visits.*', 'users.name as salesman_name', 'customers.name as customer_name')
-            ->skip(($page-1) * $num)
-            ->take($num)
             ->orderBy('id', 'desc')
-            ->get();
+            ->get()
+            ->toArray();
     }
 
-    public function AdminGet($page, $num, $keyword = null)
+    /**
+     * 获取单个业务员客户
+     *
+     * @param $salesman_id
+     * @return array
+     */
+    public function getVisitBysalesmanId($salesman_id)
     {
-        if (!empty($keyword)) {
-            return $this->visit
-                ->where('visits.customer_id', $keyword)
-                ->join('users', 'visits.salesman_id', 'users.id')
-                ->join('customers', 'visits.customer_id', 'customers.id')
-                ->select('visits.*', 'users.name as salesman_name', 'customers.name as customer_name')
-                ->skip(($page-1) * $num)
-                ->take($num)
-                ->orderBy('id', 'desc')
-                ->get();
-        }
-
         return $this->visit
+            ->where('visits.salesman_id', $salesman_id)
             ->join('users', 'visits.salesman_id', 'users.id')
             ->join('customers', 'visits.customer_id', 'customers.id')
             ->select('visits.*', 'users.name as salesman_name', 'customers.name as customer_name')
-            ->skip(($page-1) * $num)
-            ->take($num)
             ->orderBy('id', 'desc')
-            ->get();
+            ->get()
+            ->toArray();
     }
 
-    public function countGet($keyword = null)
+    public function countGet()
     {
-        if (!empty($keyword)) {
-            return $this->visit
-                ->where('customer_id', $keyword)
-                ->count();
-        }
-
-        return $this->visit
-            ->where('salesman_id', Auth::id())
-            ->count();
+        return count($this->getValue());
     }
 
     public function AdminCountGet($keyword = null)
@@ -113,19 +184,23 @@ class VisitRepository
     public function updateOrCreate($post, $id)
     {
         if (empty($id) && $id !== 0) {
-            return $this->visit->create($post);
+            $this->visit->create($post);
+        } else {
+            $this->visit->where('id', $id)->update($post);
         }
 
-        return $this->visit
-            ->where('id', $id)
-            ->update($post);
+        //删除redis缓存
+        return $this->redis->redisMultiDelete('all_visit');
     }
 
     public function destroy($id)
     {
-        return $this->visit
+        $this->visit
             ->where('id', $id)
             ->delete();
+
+        //删除redis缓存
+        return $this->redis->redisMultiDelete('all_visit');
     }
 
     public function unique($post)

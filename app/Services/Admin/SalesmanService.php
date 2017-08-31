@@ -22,6 +22,10 @@ class SalesmanService
      */
     public function get($page, $num, $keyword = null)
     {
+        if (!empty($keyword)) {
+            return $this->user->getSearch($page, $num, $keyword);
+        }
+
         return $this->user->get($page, $num);
     }
 
@@ -30,9 +34,9 @@ class SalesmanService
      *
      * @return mixed
      */
-    public function countGet($keyword = null)
+    public function countGet()
     {
-        return $this->user->countGet($keyword);
+        return $this->user->countGet();
     }
 
     /**
@@ -66,15 +70,16 @@ class SalesmanService
      */
     public function updateOrCreate($post, $id = null)
     {
-        //添加负责人时执行权限验证
-        if ($post['type'] != 0 && !Auth::user()->can('admin', User::class)) {
-            throw new \Exception('没有权限创建负责人账号');
+        //验证是否可以操作当前业务员
+        if (!empty($id)) {
+            if (!Auth::user()->can('control', User::find($id))) {
+                throw new \Exception('没有权限操作该业务员！');
+            }
         }
 
+        //统计数据
         $add['name'] = $post['name'];
-
         $add['email'] = $post['email'];
-
         $add['type'] = $post['type'];
 
         //创建时指定父级
