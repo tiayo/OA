@@ -10,7 +10,7 @@ class Customer extends Model
         'salesman_id',
         'name',
         'phone',
-        'email',
+        'wx',
         'company',
     ];
 }
