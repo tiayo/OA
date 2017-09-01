@@ -63,13 +63,15 @@
                     <div class="form-group">
                         <label for="email" class="col-sm-2 col-sm-2 control-label">业务员邮箱</label>
                         <div class="col-sm-3">
-                            <input type="email" class="form-control" id="email" name="email" value="{{ $old_input['email'] or null}}">
+                            <input type="email" id="old_email" name="email" class="hidden" disabled>
+                            <input type="email" class="form-control" id="email" name="email" autoComplete="off" value="{{ $old_input['email'] or null}}">
                         </div>
                     </div>
                     <div class="form-group">
                         <label for="password" class="col-sm-2 col-sm-2 control-label">密码</label>
                         <div class="col-sm-3">
-                            <input type="password" class="form-control" id="password" placeholder="放空则使用默认值或不做修改">
+                            <input type="password" id="old_password" name="password" class="hidden" disabled>
+                            <input type="password" class="form-control" id="password" autoComplete="off" placeholder="放空则使用默认值或不做修改">
                         </div>
                     </div>
                     <div class="form-group">

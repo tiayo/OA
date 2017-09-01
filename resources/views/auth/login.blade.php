@@ -33,7 +33,7 @@
                 {{ csrf_field() }}
                 <input type="text" class="form-control" placeholder="输入用户名" autofocus name="name" value="{{ session('_old_input')['name'] }}" required>
                 <input type="password" class="form-control" placeholder="密码" name="password" required>
-                <input class="form-control" type="text" placeholder="验证码" name="code" required>
+                <input class="form-control" type="text" placeholder="验证码" name="code" autocomplete="off" required>
                 <img  height="40" style="margin-bottom: 1em;" alt="验证码" title="点击刷新" src="{{ route('captcha', ['group' => 'login']) }}" onclick="javascript:this.src=this.src+'?time='+Math.random()">
                 <!--错误输出-->
                 <div class="form-group">
