@@ -46,7 +46,7 @@
                                 @if(!empty($old_input['type']))
                                     <option value="{{ $old_input['type'] }}">
                                         @if($old_input['type'] == 0)业务员
-                                        @elseif($old_input['type'] == 2)负责人
+                                        @elseif($old_input['type'] == 2)组长
                                         @elseif($old_input['type'] == 1)超级管理员
                                         @endif
                                     </option>
@@ -55,7 +55,7 @@
                                    <option value="0">业务员</option>
 
                                 @if(Auth::user()->can('admin', \App\User::class))
-                                    <option value="2">负责人</option>
+                                    <option value="2">组长</option>
                                 @endif
                             </select>
                         </div>
