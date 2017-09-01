@@ -19,7 +19,7 @@ class AdminSeeder extends Seeder
      */
     public function run()
     {
-        $admins = config('admin.admin_name');
+        $admins = config('site.admin_name');
 
         foreach ($admins as $admin) {
 
