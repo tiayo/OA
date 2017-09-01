@@ -20,7 +20,7 @@
                     <div class="form-group">
                         <label class="sr-only" for="search"></label>
                         <input type="text" class="form-control" id="search" name="keyword"
-                               value="{{ Request::route('keyword') }}" placeholder="姓名、邮箱、手机、公司" required>
+                               value="{{ Request::route('keyword') }}" placeholder="姓名、微信、手机、公司" required>
                     </div>
                     <button type="submit" class="btn btn-primary">搜索</button>
                 </form>
