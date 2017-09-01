@@ -22,12 +22,8 @@ class AdminSeeder extends Seeder
         $admins = config('site.admin_name');
 
         foreach ($admins as $admin) {
-
-            if (empty($user = $this->user->where('name', $admin)->first())) {
-                return $this->create($admin);
-            }
-
-            return $this->update($user->id);
+            empty($user = $this->user->where('name', $admin)->first()) ?
+                $this->create($admin) : $this->update($user->id);
         }
     }
 
