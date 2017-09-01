@@ -20,7 +20,7 @@ class UserPolicy
 
     public function admin($user)
     {
-        return $user['name'] === config('site.admin_name');
+        return CustomerPolicy::admin($user);
     }
 
     public function view($user)

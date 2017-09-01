@@ -23,9 +23,17 @@ class CustomerPolicy
      * @param $user
      * @return bool
      */
-    public function admin($user)
+    public static function admin($user)
     {
-        return $user['name'] === config('site.admin_name');
+        $admins = config('site.admin_name');
+
+        foreach ($admins as $admin) {
+            if ($user['name'] == $admin) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

@@ -137,11 +137,7 @@ class SalesmanController extends Controller
      */
     public function destroy($id)
     {
-        try {
-            $this->salesman->destroy($id);
-        } catch (\Exception $e) {
-
-        }
+        $this->salesman->destroy($id);
 
         return redirect()->route('salesman_list');
     }

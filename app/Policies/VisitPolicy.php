@@ -31,7 +31,7 @@ class VisitPolicy
      */
     public function admin($user)
     {
-        return $user['name'] === config('site.admin_name');
+        return CustomerPolicy::admin($user);
     }
 
     /**

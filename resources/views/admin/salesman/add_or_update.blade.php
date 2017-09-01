@@ -40,13 +40,14 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label for="type" class="col-sm-2 col-sm-2 control-label">业务员邮箱</label>
+                        <label for="type" class="col-sm-2 col-sm-2 control-label">类型</label>
                         <div class="col-sm-3">
                             <select class="form-control" id="type" name="type">
                                 @if(!empty($old_input['type']))
                                     <option value="{{ $old_input['type'] }}">
                                         @if($old_input['type'] == 0)业务员
                                         @elseif($old_input['type'] == 2)负责人
+                                        @elseif($old_input['type'] == 1)超级管理员
                                         @endif
                                     </option>
                                 @endif
