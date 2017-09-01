@@ -19,24 +19,25 @@ class AdminSeeder extends Seeder
      */
     public function run()
     {
-        $admin = $this->user
-            ->where('name', 'admin')
-            ->first();
+        $admins = config('admin.admin_name');
 
-        if (empty($admin)) {
-            return $this->create();
+        foreach ($admins as $admin) {
+
+            if (empty($user = $this->user->where('name', $admin)->first())) {
+                return $this->create($admin);
+            }
+
+            return $this->update($user->id);
         }
-
-        return $this->update($admin->id);
     }
 
-    public function create()
+    public function create($admin)
     {
         return $this->user->create([
-            'name' => 'admin',
-            'email' => 'admin@admin.com',
+            'name' => $admin,
+            'email' => $admin.'@startce.com',
             'parent_id' => 0,
-            'password' => bcrypt('123456'),
+            'password' => bcrypt(env('ADMIN_PASSWORD', '123456')),
             'type' => 1
         ]);
     }
