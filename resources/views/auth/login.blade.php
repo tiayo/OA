@@ -25,7 +25,7 @@
 
     <div class="form-signin" action="index.html">
         <div class="form-signin-heading text-center">
-            <h1 class="sign-title">OA登录</h1>
+            <h1 class="sign-title">客户关系管理系统</h1>
             <img src="/style/media/image/logo.png" width="70%" alt=""/>
         </div>
         <div class="login-wrap">

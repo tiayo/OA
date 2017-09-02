@@ -8,7 +8,7 @@
     <meta name="author" content="ThemeBucket">
     <link rel="shortcut icon" href="#" type="image/png">
 
-    <title>{{config('site.title')}}-@yield('title')</title>
+    <title>@yield('title')-{{config('site.title')}}</title>
     @section('style')
         <!--icheck-->
         <link href="{{ asset('/static/adminex/js/iCheck/skins/minimal/minimal.css') }}" rel="stylesheet">
