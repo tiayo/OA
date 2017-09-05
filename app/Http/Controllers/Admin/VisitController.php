@@ -7,6 +7,7 @@ use App\Services\Admin\CustomerService;
 use App\Services\Admin\SalesmanService;
 use App\Services\VisitService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class VisitController extends Controller
 {
@@ -91,11 +92,20 @@ class VisitController extends Controller
     {
         $customers = $this->customer->get(1, 10000);
 
+        $result = [];
+
+        //添加回访记录只能添加自己的直属客户，这里过滤
+        foreach ($customers as $customer) {
+            if ($customer['salesman_id'] == Auth::id()) {
+                $result[] = $customer;
+            }
+        }
+
         return view('admin.visit.add_or_update', [
             'old_input' => $this->request->session()->get('_old_input'),
             'url' => Route('visit_add'),
             'sign' => 'add',
-            'customers' => $customers,
+            'customers' => $result,
         ]);
     }
 
@@ -106,9 +116,6 @@ class VisitController extends Controller
      */
     public function updateView($id)
     {
-        //获取当前业务员所有客户
-        $customers = $this->customer->get(1, 10000);
-
         //从session获取
         $old_input = session('_old_input');
 
@@ -120,8 +127,7 @@ class VisitController extends Controller
         return view('admin.visit.add_or_update', [
             'old_input' => $old_input,
             'url' => Route('visit_update', ['id' => $id]),
-            'sign' => 'update',
-            'customers' => $customers,
+            'sign' => 'update'
         ]);
     }
 
