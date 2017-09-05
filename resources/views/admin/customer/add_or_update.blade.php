@@ -16,6 +16,12 @@
 
         <!--错误输出-->
         <div class="form-group">
+            <div class="alert alert-info fade in" id="alert_info">
+                <a href="#" class="close" data-dismiss="alert">×</a>
+                <span>
+                     <li>注：微信、电话、公司没有的请填“无”！</li>
+                </span>
+            </div>
             <div class="alert alert-danger fade in @if(!count($errors) > 0) hidden @endif" id="alert_error">
                 <a href="#" class="close" data-dismiss="alert">×</a>
                 <span>
@@ -37,25 +43,29 @@
                     <div class="form-group">
                         <label for="name" class="col-sm-2 col-sm-2 control-label">客户姓名</label>
                         <div class="col-sm-3">
-                            <input type="text" class="form-control" id="name" name="name" value="{{ $old_input['name'] }}" required>
+                            <input type="text" class="form-control" id="name"
+                                   name="name" value="{{ $old_input['name'] }}" placeholder="必须填写" required>
                         </div>
                     </div>
                     <div class="form-group">
                         <label for="wx" class="col-sm-2 col-sm-2 control-label">客户微信</label>
                         <div class="col-sm-3">
-                            <input type="text" class="form-control" id="wx" name="wx" value="{{ $old_input['wx'] or null}}">
+                            <input type="text" class="form-control" id="wx"
+                                   name="wx" value="{{ $old_input['wx'] or null}}" placeholder="没有请填’无‘" >
                         </div>
                     </div>
                     <div class="form-group">
                         <label for="phone" class="col-sm-2 col-sm-2 control-label">客户电话</label>
                         <div class="col-sm-3">
-                            <input type="text" class="form-control" id="phone" name="phone" value="{{ $old_input['phone'] or null}}">
+                            <input type="text" class="form-control" id="phone"
+                                   name="phone" value="{{ $old_input['phone'] or null}}" placeholder="没有请填’无‘" >
                         </div>
                     </div>
                     <div class="form-group">
                         <label for="company" class="col-sm-2 col-sm-2 control-label">客户公司</label>
                         <div class="col-sm-3">
-                            <input type="text" class="form-control" id="company" name="company" value="{{ $old_input['company'] or null}}">
+                            <input type="text" class="form-control" id="company"
+                                   name="company" value="{{ $old_input['company'] or null}}" placeholder="没有请填’无‘" >
                         </div>
                     </div>
                     <div class="form-group">

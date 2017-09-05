@@ -202,9 +202,18 @@ class CustomerRepository
             ->where('id', '<>', $id)
             ->where(function ($query) use($post) {
                 $query->where('name', $post['name'])
-                    ->orWhere('phone', $post['phone'])
-                    ->orWhere('company', $post['company'])
-                    ->orWhere('wx', $post['wx']);
+                    ->orWhere(function ($query) use ($post) {
+                        $query->where('phone', $post['phone'])
+                            ->where('phone', '<>', '无');
+                    })
+                    ->orWhere(function ($query) use ($post) {
+                        $query->where('company', $post['company'])
+                            ->where('company', '<>', '无');
+                    })
+                    ->orWhere(function ($query) use ($post) {
+                        $query->where('wx', $post['wx'])
+                            ->where('wx', '<>', '无');
+                    });
             })
             ->first();
     }
