@@ -50,8 +50,10 @@ class VisitRepository
 
         $result = [];
 
+        $explode = explode('_', $keyword);
+
         foreach ($visits as $visit) {
-            if ($visit['customer_id']== $keyword) {
+            if ($visit[$explode[0].'_id']== $explode[1]) {
                 $result[] = $visit;
             }
         }

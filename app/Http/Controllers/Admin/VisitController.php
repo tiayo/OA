@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Services\Admin\CustomerService;
+use App\Services\Admin\SalesmanService;
 use App\Services\VisitService;
 use Illuminate\Http\Request;
 
@@ -12,14 +13,19 @@ class VisitController extends Controller
     protected $visit;
     protected $request;
     protected $customer;
+    protected $salesman;
 
-    public function __construct(VisitService $visit, Request $request, CustomerService $customer)
+    public function __construct(VisitService $visit,
+                                Request $request,
+                                CustomerService $customer,
+                                SalesmanService $salesman)
     {
         $this->middleware('visit_control');
 
         $this->visit = $visit;
         $this->request = $request;
         $this->customer = $customer;
+        $this->salesman = $salesman;
     }
 
     /**
@@ -30,6 +36,8 @@ class VisitController extends Controller
     public function listView($page)
     {
         $customers = $this->customer->get(1, 10000);
+
+        $salesmans = $this->salesman->get(1, 10000);
 
         $num = config('site.list_num');
 
@@ -42,6 +50,7 @@ class VisitController extends Controller
             'num' => $num,
             'count' => ceil($this->visit->countGet() / $num),
             'customers' => $customers,
+            'salesmans' => $salesmans,
             'sign' => 'list',
         ]);
     }
@@ -59,6 +68,8 @@ class VisitController extends Controller
 
         $customers = $this->customer->get(1, 10000);
 
+        $salesmans = $this->salesman->get(1, 10000);
+
         return view('admin.visit.list', [
             'lists' => $lists['data'],
             'page' => $page == 1 ? 2 : $page,
@@ -66,6 +77,7 @@ class VisitController extends Controller
             'num' => $num,
             'count' => ceil($lists['count'] / $num),
             'customers' => $customers,
+            'salesmans' => $salesmans,
             'sign' => 'search',
         ]);
     }

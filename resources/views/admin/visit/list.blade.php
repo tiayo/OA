@@ -21,7 +21,15 @@
                     <button data-toggle="dropdown" class="btn btn-success dropdown-toggle" type="button">选择客户 <span class="caret"></span></button>
                     <ul role="menu" class="dropdown-menu">
                         @foreach($customers as $customer)
-                            <li><a href="{{ route('visit_search', ['page' => 1, 'keyword' => $customer['id']]) }}">{{ $customer['name'] }}</a></li>
+                            <li><a href="{{ route('visit_search', ['page' => 1, 'keyword' => 'customer_'.$customer['id']]) }}">{{ $customer['name'] }}</a></li>
+                        @endforeach
+                    </ul>
+                </div>
+                <div class="btn-group">
+                    <button data-toggle="dropdown" class="btn btn-success dropdown-toggle" type="button">选择业务员 <span class="caret"></span></button>
+                    <ul role="menu" class="dropdown-menu">
+                        @foreach($salesmans as $salesman)
+                            <li><a href="{{ route('visit_search', ['page' => 1, 'keyword' => 'salesman_'.$salesman['id']]) }}">{{ $salesman['name'] }}</a></li>
                         @endforeach
                     </ul>
                 </div>
