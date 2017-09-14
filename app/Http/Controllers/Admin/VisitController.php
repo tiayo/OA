@@ -32,6 +32,7 @@ class VisitController extends Controller
     /**
      * 记录列表
      *
+     * @param $page [页码]
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
     public function listView($page)
@@ -59,6 +60,8 @@ class VisitController extends Controller
     /**
      * 搜索记录
      *
+     * @param $page [页码]
+     * @param $keyword [关键词]
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
     public function search($page, $keyword)
@@ -112,6 +115,7 @@ class VisitController extends Controller
     /**
      * 修改管理员视图
      *
+     * @param $id
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
     public function updateView($id)
@@ -160,7 +164,7 @@ class VisitController extends Controller
      * 删除记录
      *
      * @param $id
-     * @return bool|null
+     * @return \Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Http\RedirectResponse|\Symfony\Component\HttpFoundation\Response
      */
     public function destroy($id)
     {

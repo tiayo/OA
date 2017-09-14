@@ -6,7 +6,7 @@ use App\User;
 use Closure;
 use Illuminate\Support\Facades\Auth;
 
-class Admin
+class Manage
 {
     /**
      * Handle an incoming request.
@@ -18,7 +18,7 @@ class Admin
      */
     public function handle($request, Closure $next, $guard = null)
     {
-        if (!Auth::guard($guard)->user()->can('admin', User::class)) {
+        if (!Auth::guard($guard)->user()->can('manage', User::class)) {
             return response('没有权限！', 403);
         }
 

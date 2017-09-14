@@ -5,6 +5,7 @@ namespace App\Http;
 use App\Http\Middleware\Admin;
 use App\Http\Middleware\LoginAuth;
 use App\Http\Middleware\LoginGuest;
+use App\Http\Middleware\Manage;
 use App\Http\Middleware\SalesmanControl;
 use App\Http\Middleware\VisitControl;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
@@ -64,6 +65,7 @@ class Kernel extends HttpKernel
         'login_auth' => LoginAuth::class,
         'login_guest' => LoginGuest::class,
         'admin' => Admin::class,
+        'manage' => Manage::class,
         'salesman_control' => SalesmanControl::class,
         'visit_control' => VisitControl::class,
     ];
