@@ -23,8 +23,8 @@ Route::group(['namespace' => 'Admin', 'prefix' => 'admin'], function () {
         // ---------------------------后台首页--------------------------- //
         Route::get('/', 'IndexController@index')->name('admin');
 
-        // ---------------------------管理员管理业务员（必须管理员才可以操作）--------------------------- //
-        Route::group(['middleware' => 'admin'], function () {
+        // ---------------------------组长及以上权限操作--------------------------- //
+        Route::group(['middleware' => 'manage'], function () {
             Route::get('/salesman/list', function () {
                 return redirect()->route('salesman_list', ['page' => 1]);
             })->name('salesman_list_simple');
@@ -47,6 +47,27 @@ Route::group(['namespace' => 'Admin', 'prefix' => 'admin'], function () {
 
             //删除客户
             Route::get('/visit/destroy/{id}', 'VisitController@destroy')->name('visit_destroy');
+
+            //消息相关
+            Route::get('/message/list', function () {
+                return redirect()->route('message_list', ['page' => 1]);
+            })->name('message_list_simple');
+            Route::get('/message/list/{page}', 'MessageController@listView')->name('message_list');
+            Route::get('/message/view/{id}', 'MessageController@view')->name('message_view');
+        });
+
+        // ---------------------------超级管理操作--------------------------- //
+        Route::group(['middleware' => 'admin'], function () {
+            //分组相关
+            Route::get('/group/list', function () {
+                return redirect()->route('group_list', ['page' => 1]);
+            })->name('group_list_simple');
+            Route::get('/group/list/{page}', 'GroupController@listView')->name('group_list');
+            Route::get('/group/add', 'GroupController@addView')->name('group_add');
+            Route::post('/group/add', 'GroupController@post');
+            Route::get('/group/update/{id}', 'GroupController@updateView')->name('group_update');
+            Route::post('/group/update/{id}', 'GroupController@post');
+            Route::get('/group/destroy/{id}', 'GroupController@destroy')->name('group_destroy');
         });
 
         // ---------------------------业务员操作--------------------------- //

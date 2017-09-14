@@ -1,10 +1,14 @@
 <!--sidebar nav start-->
 <ul style="margin-top:100px;" class="nav nav-pills nav-stacked custom-nav">
-    @if(Auth::user()->can('manage', \App\User::class))
+    @if(can('manage'))
         <li class="menu-list" id="nav_0"><a href=""><i class="fa fa-user"></i> <span>管理员操作</span></a>
             <ul class="sub-menu-list">
                 <li id="nav_0_1"><a href="{{ Route('salesman_list_simple') }}">业务员列表</a></li>
                 <li id="nav_0_2"><a href="{{ Route('salesman_add') }}">添加业务员</a></li>
+                <li id="nav_0_3"><a href="{{ Route('message_list_simple') }}">消息列表</a></li>
+                @if(can('admin'))
+                    <li id="nav_0_4"><a href="{{ Route('group_list_simple') }}">业务员分组</a></li>
+                @endif
             </ul>
         </li>
     @endif
