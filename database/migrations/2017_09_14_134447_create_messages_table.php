@@ -19,6 +19,7 @@ class CreateMessagesTable extends Migration
             $table->integer('option');
             $table->integer('salesman_id');
             $table->longText('content');
+            $table->longText('origin');
             $table->integer('status')->default(0);
             $table->timestamps();
         });
