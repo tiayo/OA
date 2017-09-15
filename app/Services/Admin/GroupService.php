@@ -57,13 +57,12 @@ class GroupService
         $data['salesman_id'] = $new_user_id = $post['salesman_id'];
 
         //获取原用户
-        $origin = $this->first($id)->toArray();
-        $origin_user_id = $origin['salesman_id'];
+        empty($id) ? $option = 2 : $origin = $this->first($id)->toArray();
 
         $group_id  = empty($id) ? $id = $this->group->create($data)->id : $this->group->update($id, $data);
 
         //更新或插入用户
-        $this->updateGroup($group_id, $new_user_id, $origin_user_id);
+        $this->updateGroup($group_id, $new_user_id, $origin['salesman_id'] ?? 0);
 
         //执行写入消息事件
         return event(new AddMessage(
@@ -82,7 +81,7 @@ class GroupService
      * @param $new_user_id
      * @param $origin_user_id
      */
-    public function updateGroup($group_id, $new_user_id, $origin_user_id)
+    public function updateGroup($group_id, $new_user_id, $origin_user_id = 0)
     {
         //更新新用户
         $this->user->updateOrCreate(['group' => $group_id], $new_user_id);
