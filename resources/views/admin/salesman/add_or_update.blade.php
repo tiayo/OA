@@ -54,12 +54,31 @@
 
                                    <option value="0">业务员</option>
 
-                                @if(Auth::user()->can('admin', \App\User::class))
-                                    <option value="2">组长</option>
+                                @if(can('admin'))
+                                        <option value="2">组长</option>
                                 @endif
                             </select>
                         </div>
                     </div>
+                    @if(can('admin'))
+                        <div class="form-group">
+                            <label for="group" class="col-sm-2 col-sm-2 control-label">分组</label>
+                            <div class="col-sm-3">
+                                <select class="form-control" id="group" name="group">
+                                    @if(!empty($old_input['group']))
+                                        @foreach($groups as $group)
+                                            @if($group['id'] == $old_input['group'])
+                                                <option value="{{ $group['id'] }}">{{ $group['name'] }}</option>
+                                            @endif
+                                        @endforeach
+                                    @endif
+                                    @foreach($groups as $group)
+                                        <option value="{{ $group['id'] }}">{{ $group['name'] }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                    @endif
                     <div class="form-group">
                         <label for="email" class="col-sm-2 col-sm-2 control-label">业务员邮箱</label>
                         <div class="col-sm-3">

@@ -37,7 +37,7 @@ class CustomerPolicy
     }
 
     /**
-     * 是否可以控制当前客户记录
+     * 是否可以控制当前记录
      * 允许管理员跨过权限操作
      *
      * @param $user
@@ -57,14 +57,14 @@ class CustomerPolicy
         }
 
         //负责人鉴权
-        $all_children = $this->salesman->getChildren(Auth::id(), 'id', 'parent_id');
-
-        foreach ($all_children as $child) {
-            if ($customer['salesman_id'] == $child['id']) {
-                return true;
-            }
+        if (!can('manage')) {
+            return false;
         }
 
-        return false;
+        //获取组成员
+        return $this->salesman->selectFirst([
+            ['group', $user['group']],
+            ['id', $customer['salesman_id']]
+        ], 'id')['id'] ? true : false;
     }
 }

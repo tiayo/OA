@@ -22,40 +22,14 @@ class CustomerController extends Controller
      *
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
-    public function listView($page)
+    public function listView($keyword = null)
     {
         $num = config('site.list_num');
 
-        $customers = $this->customer->get($page, $num);
+        $customers = $this->customer->get($num, $keyword);
 
         return view('admin.customer.list', [
             'customers' => $customers,
-            'page' => $page == 1 ? 2 : $page,
-            'current' =>  $page,
-            'num' => $num,
-            'count' => ceil($this->customer->countGet() / $num),
-            'sign' => 'list'
-        ]);
-    }
-
-    /**
-     * 搜索记录
-     *
-     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
-     */
-    public function search($page, $keyword)
-    {
-        $num = config('site.list_num');
-
-        $customers = $this->customer->get($page, $num, $keyword);
-
-        return view('admin.customer.list', [
-            'customers' => $customers['data'],
-            'page' => $page == 1 ? 2 : $page,
-            'current' =>  $page,
-            'num' => $num,
-            'count' => ceil($customers['count'] / $num),
-            'sign' => 'search'
         ]);
     }
 
@@ -80,16 +54,11 @@ class CustomerController extends Controller
      */
     public function updateView($id)
     {
-        if ($this->request->session()->has('_old_input')) {
-            //从session获取
-            $old_input = session('_old_input');
-        } else {
-            //从数据库获取
-            try {
-                $old_input = $this->customer->first($id);
-            } catch (\Exception $e) {
-               return response($e->getMessage(), 403);
-            }
+        try {
+            $old_input = $this->request->session()->has('_old_input') ?
+                session('_old_input') : $this->customer->first($id);
+        } catch (\Exception $e) {
+            return response($e->getMessage(), $e->getCode());
         }
 
         return view('admin.customer.add_or_update', [
@@ -128,7 +97,7 @@ class CustomerController extends Controller
         //执行更新操作
         $this->customer->updateOrCreate($this->request->all(), $id);
 
-        return redirect()->route('customer_list_simple');
+        return redirect()->route('customer_list');
     }
 
     /**
@@ -139,12 +108,10 @@ class CustomerController extends Controller
      */
     public function destroy($id)
     {
-        try {
-            $this->customer->destroy($id);
-        } catch (\Exception $e) {
-            return response($e->getMessage());
+        if ($this->customer->destroy($id)) {
+            return redirect()->route('salesman_list');
         }
 
-        return redirect()->route('customer_list_simple');
+        return response('删除失败！', 500);
     }
 }

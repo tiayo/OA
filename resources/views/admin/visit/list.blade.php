@@ -21,18 +21,30 @@
                     <button data-toggle="dropdown" class="btn btn-success dropdown-toggle" type="button">选择客户 <span class="caret"></span></button>
                     <ul role="menu" class="dropdown-menu">
                         @foreach($customers as $customer)
-                            <li><a href="{{ route('visit_search', ['page' => 1, 'keyword' => 'customer_'.$customer['id']]) }}">{{ $customer['name'] }}</a></li>
+                            <li><a href="{{ route('visit_search', ['keyword' => 'customer_'.$customer['id']]) }}">{{ $customer['name'] }}</a></li>
                         @endforeach
                     </ul>
                 </div>
-                <div class="btn-group">
-                    <button data-toggle="dropdown" class="btn btn-success dropdown-toggle" type="button">选择业务员 <span class="caret"></span></button>
-                    <ul role="menu" class="dropdown-menu">
-                        @foreach($salesmans as $salesman)
-                            <li><a href="{{ route('visit_search', ['page' => 1, 'keyword' => 'salesman_'.$salesman['id']]) }}">{{ $salesman['name'] }}</a></li>
-                        @endforeach
-                    </ul>
-                </div>
+                @if(can('manage'))
+                    <div class="btn-group">
+                        <button data-toggle="dropdown" class="btn btn-success dropdown-toggle" type="button">选择业务员 <span class="caret"></span></button>
+                        <ul role="menu" class="dropdown-menu">
+                            @foreach($salesmans as $salesman)
+                                <li><a href="{{ route('visit_search', ['keyword' => 'salesman_'.$salesman['id']]) }}">{{ $salesman['name'] }}</a></li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+                @if(can('admin'))
+                    <div class="btn-group">
+                        <button data-toggle="dropdown" class="btn btn-success dropdown-toggle" type="button">选择分组 <span class="caret"></span></button>
+                        <ul role="menu" class="dropdown-menu">
+                            @foreach($groups as $group)
+                                <li><a href="{{ route('visit_search', ['keyword' => 'group_'.$group['id']]) }}">{{ $group['name'] }}</a></li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
             <header class="panel-heading">
                 客户列表
             </header>
@@ -57,7 +69,7 @@
                             <td>{{ $list['record'] }}</td>
                             <td>{{ $list['created_at'] }}</td>
                             <td>
-                                @if($auth = Auth::user()->can('control', \App\Visit::find($list['id'])))
+                                @if(can('manage'))
                                     <button class="btn btn-info" type="button" onclick="location='{{ route('visit_update', ['id' => $list['id'] ]) }}'">编辑</button>
                                     <button class="btn btn-danger" type="button" onclick="javascript:if(confirm('确实要删除吗?'))location='{{ route('visit_destroy', ['id' => $list['id'] ]) }}'">删除</button>
                                     @else 无权限
@@ -78,25 +90,4 @@
 
 @section('script')
     @parent
-    @if(!empty($page))
-        <script type="text/javascript">
-            $(function(){
-                $(".pagination").createPage({
-                    totalPage:{{ $count }},
-                    currPage:{{ $current }},
-                    @if($sign == 'search')
-                        url:"{{ route('visit_search_simple') }}",
-                        keyword:"{{ Request::route('keyword') }}",
-                    @else
-                        url:"{{ route('visit_list_simple') }}",
-                    @endif
-                });
-            });
-        </script>
-        @if($sign == 'search')
-            <script src="{{ asset('style/js/pagingSearch.js') }}"></script>
-        @else
-            <script src="{{ asset('style/js/paging.js') }}"></script>
-        @endif
-    @endif
 @endsection

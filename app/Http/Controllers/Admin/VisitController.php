@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Services\Admin\CustomerService;
+use App\Services\Admin\GroupService;
 use App\Services\Admin\SalesmanService;
 use App\Services\VisitService;
 use Illuminate\Http\Request;
@@ -15,11 +16,13 @@ class VisitController extends Controller
     protected $request;
     protected $customer;
     protected $salesman;
+    protected $group;
 
     public function __construct(VisitService $visit,
                                 Request $request,
                                 CustomerService $customer,
-                                SalesmanService $salesman)
+                                SalesmanService $salesman,
+                                GroupService $group)
     {
         $this->middleware('visit_control');
 
@@ -27,6 +30,7 @@ class VisitController extends Controller
         $this->request = $request;
         $this->customer = $customer;
         $this->salesman = $salesman;
+        $this->group = $group;
     }
 
     /**
@@ -35,54 +39,23 @@ class VisitController extends Controller
      * @param $page [页码]
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
-    public function listView($page)
+    public function listView($keyword = null)
     {
-        $customers = $this->customer->get(1, 10000);
+        $customers = $this->customer->get();
 
-        $salesmans = $this->salesman->get(1, 10000);
+        $salesmans = $this->salesman->get();
+
+        $groups = $this->group->get();
 
         $num = config('site.list_num');
 
-        $lists = $this->visit->get($page, $num);
+        $lists = $this->visit->get($num, $keyword);
 
         return view('admin.visit.list', [
             'lists' => $lists,
-            'page' => $page == 1 ? 2 : $page,
-            'current' =>  $page,
-            'num' => $num,
-            'count' => ceil($this->visit->countGet() / $num),
             'customers' => $customers,
             'salesmans' => $salesmans,
-            'sign' => 'list',
-        ]);
-    }
-
-    /**
-     * 搜索记录
-     *
-     * @param $page [页码]
-     * @param $keyword [关键词]
-     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
-     */
-    public function search($page, $keyword)
-    {
-        $num = config('site.list_num');
-
-        $lists = $this->visit->get($page, $num, $keyword);
-
-        $customers = $this->customer->get(1, 10000);
-
-        $salesmans = $this->salesman->get(1, 10000);
-
-        return view('admin.visit.list', [
-            'lists' => $lists['data'],
-            'page' => $page == 1 ? 2 : $page,
-            'current' =>  $page,
-            'num' => $num,
-            'count' => ceil($lists['count'] / $num),
-            'customers' => $customers,
-            'salesmans' => $salesmans,
-            'sign' => 'search',
+            'groups' => $groups,
         ]);
     }
 
@@ -93,7 +66,7 @@ class VisitController extends Controller
      */
     public function addView()
     {
-        $customers = $this->customer->get(1, 10000);
+        $customers = $this->customer->get();
 
         $result = [];
 
@@ -157,7 +130,7 @@ class VisitController extends Controller
         //执行操作
         $this->visit->updateOrCreate($this->request->all(), $id);
 
-        return redirect()->route('visit_list_simple');
+        return redirect()->route('visit_list');
     }
 
     /**
@@ -174,6 +147,6 @@ class VisitController extends Controller
             return response($e->getMessage());
         }
 
-        return redirect()->route('visit_list_simple');
+        return redirect()->route('visit_list');
     }
 }

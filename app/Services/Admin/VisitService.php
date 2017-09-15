@@ -24,23 +24,13 @@ class VisitService
      *
      * @return mixed
      */
-    public function get($page, $num, $keyword = null)
+    public function get($num, $keyword = null)
     {
         if (!empty($keyword)) {
-            return $this->visit->getSearch($page, $num, $keyword);
+            return $this->visit->getSearch($num, $keyword);
         }
 
-        return $this->visit->get($page, $num);
-    }
-
-    /**
-     * 统计数量
-     *
-     * @return mixed
-     */
-    public function countGet()
-    {
-        return $this->visit->countGet();
+        return $this->visit->get($num);
     }
 
     /**

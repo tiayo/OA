@@ -2,18 +2,21 @@
 
 namespace App\Services\Admin;
 
-use App\Customer;
+use App\Events\AddMessage;
 use App\Repositories\GroupRepository;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
+use App\Repositories\UsersRepository;
 
 class GroupService
 {
     protected $group;
+    protected $salesman;
+    protected $user;
 
-    public function __construct(GroupRepository $group)
+    public function __construct(GroupRepository $group, SalesmanService $salesman, UsersRepository $user)
     {
         $this->group = $group;
+        $this->salesman = $salesman;
+        $this->user = $user;
     }
 
     /**
@@ -21,23 +24,13 @@ class GroupService
      *
      * @return mixed
      */
-    public function get($page, $num, $keyword = null)
+    public function get($num = 10000, $keyword = null)
     {
         if (!empty($keyword)) {
-            return $this->group->search($page, $num, $keyword);
+            return $this->group->search($num, $keyword);
         }
 
-        return $this->group->get($page, $num);
-    }
-
-    /**
-     * 统计数量
-     *
-     * @return mixed
-     */
-    public function countGet()
-    {
-        return $this->group->count();
+        return $this->group->get($num);
     }
 
     /**
@@ -60,18 +53,42 @@ class GroupService
      */
     public function updateOrCreate($post, $id = null)
     {
-        $add['salesman_id'] = $post['salesman_id'];
-        $add['name'] = $post['name'];
-        $add['phone'] = $post['phone'];
-        $add['wx'] = $post['wx'];
-        $add['company'] = $post['company'];
-        $add['remark'] = $post['remark'] ?? null;
+        $data['name'] = $post['name'];
+        $data['salesman_id'] = $new_user_id = $post['salesman_id'];
 
-        if (!empty($id)) {
-            return $this->group->update($id, $add);
-        }
+        //获取原用户
+        $origin = $this->first($id)->toArray();
+        $origin_user_id = $origin['salesman_id'];
 
-        return $this->group->create($add);
+        $group_id  = empty($id) ? $id = $this->group->create($data)->id : $this->group->update($id, $data);
+
+        //更新或插入用户
+        $this->updateGroup($group_id, $new_user_id, $origin_user_id);
+
+        //执行写入消息事件
+        return event(new AddMessage(
+            'group',
+            $option ?? 1,
+            $data,
+            $origin ?? [],
+            $id
+        ));
+    }
+
+    /**
+     * 更新分组关系
+     *
+     * @param $group_id
+     * @param $new_user_id
+     * @param $origin_user_id
+     */
+    public function updateGroup($group_id, $new_user_id, $origin_user_id)
+    {
+        //更新新用户
+        $this->user->updateOrCreate(['group' => $group_id], $new_user_id);
+
+        //更新原用户
+        $this->user->updateOrCreate(['group' => 0], $origin_user_id);
     }
 
     /**
@@ -82,6 +99,22 @@ class GroupService
      */
     public function destroy($id)
     {
+        //如果分组下有用户，则不可以删除
+        if ($this->salesman->countGroup($id) > 0) {
+            return false;
+        }
+
         return $this->group->destroy($id);
+    }
+
+    /**
+     * 返回所有业务员
+     * 限制上限10000条，可以修改
+     *
+     * @return mixed
+     */
+    public function getAllSalesman()
+    {
+        return $this->salesman->get(10000);
     }
 }

@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Group;
 use App\Services\RedisServiceInterface;
+use Illuminate\Auth\Authenticatable;
 
 class GroupRepository
 {
@@ -40,25 +41,28 @@ class GroupRepository
         return $this->group->find($id);
     }
 
-    public function search($page, $num, $keyword)
+    public function search($num, $keyword)
     {
         return $this->group
-            ->where('name', 'like', "%$keyword%")
-            ->skip(($page - 1) * $num)
-            ->take($num)
-            ->get();
+            ->where('groups.name', 'like', "%$keyword%")
+            ->join('users', 'groups.salesman_id', 'users.id')
+            ->select('groups.*', 'users.name as salesman_name')
+            ->paginate($num);
     }
 
-    public function get($page, $num)
+    public function get($num)
     {
         return $this->group
-            ->skip(($page - 1) * $num)
-            ->take($num)
-            ->get();
+            ->join('users', 'groups.salesman_id', 'users.id')
+            ->select('groups.*', 'users.name as salesman_name')
+            ->paginate($num);
     }
 
-    public function count()
+    public function selectFirst($where, ...$select)
     {
-        return $this->group->count();
+        return $this->group
+            ->select($select)
+            ->where($where)
+            ->first();
     }
 }

@@ -2,157 +2,131 @@
 
 namespace App\Repositories;
 
-use App\Services\RedisServiceInterface;
+use App\Group;
 use App\User;
 use Illuminate\Support\Facades\Auth;
 
 class UsersRepository
 {
     protected $user;
-    protected $redis;
+    protected $group;
 
-    public function __construct(User $user, RedisServiceInterface $redis)
+    public function __construct(User $user, Group $group)
     {
         $this->user = $user;
-        $this->redis = $redis;
+        $this->group = $group;
     }
 
     public function create($data)
     {
-        $this->user->create($data);
-
-        return $this->redis->redisMultiDelete('all_salesman');
+        return $this->user->create($data);
     }
 
     /**
-     * 获取记录调度方法
+     * 获取所有显示记录（调度）
+     *
+     * @param $num
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     */
+    public function get($num)
+    {
+        return can('admin') ? $this->adminGet($num) : $this->userGet($num);
+    }
+
+    /**
+     * 获取所有显示记录（用户级别）
      *
      * @param $page
      * @param $num
-     * @return array
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
-    public function get($page, $num)
-    {
-        $all_salesman = $this->getValue();
-
-        return array_slice($all_salesman, ($page-1)*$num, $num);
-    }
-
-    /**
-     * 从redis获取缓存或写入缓存
-     *
-     * @return array|mixed
-     */
-    public function getValue()
-    {
-        //从redis获取数据
-        $all_salesman = $this->redis->redisSingleGet('all_salesman:'.Auth::id());
-
-        //没有缓存
-        if (empty($all_salesman)) {
-            if (Auth::user()->can('admin', User::class)) {
-                $all_salesman = $this->getAll();
-            } else {
-                $all_salesman = $this->getChildren(Auth::id());
-            }
-
-            $this->redis->redisSingleAdd('all_salesman:'.Auth::id(), serialize($all_salesman), 1800);
-        } else {
-
-            $all_salesman = unserialize($all_salesman);
-        }
-
-        return $all_salesman;
-    }
-
-    /**
-     * 获取下级
-     *
-     * @param $parent
-     * @param array ...$select
-     * @return mixed
-     */
-    public function getChildren($parent, ...$select)
-    {
-        $select = !empty($select) ? $select : '*';
-
-        $all_children = $this->getAll($select);
-
-        if (isset($this->tree($all_children)[$parent])) {
-            return $this->tree($all_children)[$parent];
-        } else {
-            return [];
-        }
-    }
-
-    /**
-     * 获取所有非超级管理员用户
-     *
-     * @param string $select
-     * @return array
-     */
-    public function getAll($select = '*')
+    public function userGet($num)
     {
         return $this->user
-            ->select($select)
-            ->where('type', '<>', 1)
+            ->where('users.group', Auth::user()['group'])
+            ->where([
+                ['users.type', '<>', 1],
+                ['users.type', '<>', 2],
+            ])
+            ->join('groups', 'groups.id', 'users.group')
+            ->select('users.*', 'groups.name as group_name')
             ->orderBy('id', 'desc')
-            ->get()
-            ->toArray();
+            ->paginate($num);
     }
 
     /**
-     * 创建目录树.
-     *
-     * @param $items
-     *
-     * @return mixed
-     */
-    public function tree($items)
-    {
-        $childs = [];
-
-        foreach ($items as &$item) {
-            $childs[$item['parent_id']][] = &$item;
-        }
-
-        unset($item);
-
-        foreach ($items as &$item) {
-            if (isset($childs[$item['id']])) {
-                $item['childs'] = $childs[$item['id']];
-            }
-        }
-
-        return $childs;
-    }
-
-    /**
-     * 获取搜索结果
+     * 获取所有显示记录（超级管理员级别）
      *
      * @param $page
      * @param $num
-     * @param $keyword
-     * @return array
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
-    public function getSearch($page, $num, $keyword)
+    public function adminGet($num)
     {
-        $all_salesman = $this->getValue();
-
-        $result = [];
-
-        foreach ($all_salesman as $salesman) {
-            if (strpos($salesman['name'], $keyword) !== false || strpos($salesman['email'], $keyword) !== false) {
-                $result[] = $salesman;
-            }
-        }
-
-        return ['data' => array_slice($result, ($page-1)*$num, $num), 'count' => count($result)];
+        return $this->user
+            ->where('type', '<>', 1)
+            ->leftjoin('groups', 'groups.id', 'users.group')
+            ->select('users.*', 'groups.name as group_name')
+            ->orderBy('id', 'desc')
+            ->paginate($num);
     }
 
-    public function countGet()
+    /**
+     * 获取显示的搜索结果（调度）
+     *
+     * @param $num
+     * @param $keyword
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     */
+    public function getSearch($num, $keyword)
     {
-        return count($this->getValue());
+        return can('admin') ? $this->getAdminSearch($num, $keyword) : $this->getUserSearch($num, $keyword);
+    }
+
+    /**
+     * 获取显示的搜索结果（用户级）
+     *
+     * @param $num
+     * @param $keyword
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     */
+    public function getUserSearch($num, $keyword)
+    {
+        return $this->user
+            ->where('users.group', Auth::user()['group'])
+            ->where([
+                ['users.type', '<>', 1],
+                ['users.type', '<>', 2],
+            ])
+            ->where(function ($query) use ($keyword) {
+                $query->where('users.name', 'like', "%$keyword%")
+                    ->orwhere('users.email', 'like', "%$keyword%");
+            })
+            ->join('groups', 'groups.id', 'users.group')
+            ->select('users.*', 'groups.name as group_name')
+            ->orderBy('id', 'desc')
+            ->paginate($num);
+    }
+
+    /**
+     * 获取显示的搜索结果（超级管理员级）
+     *
+     * @param $num
+     * @param $keyword
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     */
+    public function getAdminSearch($num, $keyword)
+    {
+        return $this->user
+            ->where('type', '<>', 1)
+            ->where(function ($query) use ($keyword) {
+                $query->where('users.name', 'like', "%$keyword%")
+                    ->orwhere('users.email', 'like', "%$keyword%");
+            })
+            ->leftjoin('groups', 'groups.id', 'users.group')
+            ->select('users.*', 'groups.name as group_name')
+            ->orderBy('id', 'desc')
+            ->paginate($num);
     }
     
     public function first($id)
@@ -170,22 +144,31 @@ class UsersRepository
     public function updateOrCreate($post, $id)
     {
         if (empty($id) && $id !== 0) {
-            $this->user->create($post);
-        } else {
-            $this->user->where('id', $id)->update($post);
+            return $this->user->create($post);
         }
 
-        //删除redis缓存
-        return $this->redis->redisMultiDelete('all_salesman');
+        return$this->user->where('id', $id)->update($post);
     }
 
     public function destroy($id)
     {
-        $this->user
+        return $this->user
             ->where('id', $id)
             ->delete();
+    }
 
-        //删除redis缓存
-        return $this->redis->redisMultiDelete('all_salesman');
+    public function countGroup($group_id)
+    {
+        return $this->user
+            ->where('group', $group_id)
+            ->count();
+    }
+
+    public function selectFirst($where, ...$select)
+    {
+        return $this->user
+            ->select($select)
+            ->where($where)
+            ->first();
     }
 }

@@ -2,11 +2,9 @@
 
 namespace App\Services\Admin;
 
-use App\Customer;
+use App\Events\AddMessage;
 use App\Repositories\CustomerRepository;
-use App\User;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
+use Exception;
 
 class CustomerService
 {
@@ -18,27 +16,36 @@ class CustomerService
     }
 
     /**
+     * 通过id验证记录是否存在以及是否有操作权限
+     * 通过：返回该记录
+     * 否则：抛错
+     *
+     * @param $id
+     * @return \Illuminate\Database\Eloquent\Collection|\Illuminate\Database\Eloquent\Model|null|static|static[]
+     */
+    public function validata($id)
+    {
+        $salesman = $this->customer->first($id);
+
+        throw_if(empty($salesman), Exception::class, '未找到该用户！', 404);
+
+        throw_if(!can('control', $salesman), Exception::class, '没有权限！', 403);
+
+        return $salesman;
+    }
+
+    /**
      * 获取需要的数据
      *
      * @return mixed
      */
-    public function get($page, $num, $keyword = null)
+    public function get($num = 10000, $keyword = null)
     {
         if (!empty($keyword)) {
-            return $this->customer->getSearch($page, $num, $keyword);
+            return $this->customer->getSearch($num, $keyword);
         }
 
-        return $this->customer->get($page, $num);
-    }
-
-    /**
-     * 统计数量
-     *
-     * @return mixed
-     */
-    public function countGet()
-    {
-        return $this->customer->countGet();
+        return $this->customer->get($num);
     }
 
     /**
@@ -49,26 +56,7 @@ class CustomerService
      */
     public function first($id)
     {
-        //获取当前客户
-        $customer = $this->customer->first($id);
-
-        //验证操作权限
-        if (Auth::user()->can('control', $customer)) {
-            return $customer;
-        }
-
-        throw new \Exception('不是您的客户！');
-    }
-
-    /**
-     * 获取超级管理员id
-     * 默认数据表第一个管理员为超级管理员
-     *
-     * @return mixed
-     */
-    public function superId()
-    {
-        return $this->customer->superId()['id'];
+        return $this->validata($id);
     }
 
     /**
@@ -80,30 +68,27 @@ class CustomerService
      */
     public function updateOrCreate($post, $id = null)
     {
-        $add['salesman_id'] = $post['salesman_id'];
-        $add['name'] = $post['name'];
-        $add['phone'] = $post['phone'];
-        $add['wx'] = $post['wx'];
-        $add['company'] = $post['company'];
-        $add['remark'] = $post['remark'] ?? null;
+        $data['salesman_id'] = $post['salesman_id'];
+        $data['name'] = $post['name'];
+        $data['phone'] = $post['phone'];
+        $data['wx'] = $post['wx'];
+        $data['company'] = $post['company'];
+        $data['remark'] = $post['remark'] ?? null;
 
-        $customer = Customer::find($id);
+        //验证操作更新操作的权限
+        empty($id) ? $option = 2 : $origin = $this->validata($id)->toArray();
 
-        if (!empty($id) && !Auth::user()->can('control', $customer)) {
-            throw new \Exception('不是您的客户！');
-        }
+        //更新或插入
+        $this->customer->updateOrCreate($data, $id);
 
-        $this->customer->updateOrCreate($add, $id);
-
-        if (!empty($id) && !empty($customer)) {
-            return Log::info(
-                "用户："
-                .Auth::user()['name']."(".Auth::id().
-                ")更新原客户:".
-                json_encode($customer->toArray()).
-                "现在客户:".json_encode(Customer::find($id)->toArray())
-            );
-        }
+        //执行写入消息事件
+        return event(new AddMessage(
+            'customer',
+            $option ?? 1,
+            $data,
+            $origin ?? [],
+            $id
+        ));
     }
 
     /**
@@ -140,34 +125,16 @@ class CustomerService
     }
 
     /**
-     * 删除管理员
+     * 删除记录
      *
      * @param $id
-     * @return bool|null
+     * @return bool
      */
     public function destroy($id)
     {
-        $customer = Customer::find($id);
+        //验证是否可以操作当前记录
+        $this->validata($id);
 
-        if (empty($customer)) {
-            throw new \Exception('没有查询到客户！');
-        }
-
-        //验证操作权限
-        if (!Auth::user()->can('control', $customer)) {
-            throw new \Exception('不是您的客户！');
-        }
-
-        if ($this->customer->destroy($id))
-        {
-            return Log::info(
-                "用户：" .
-                Auth::user()['name']."(".Auth::id().
-                ")删除了客户:".
-                json_encode($customer->toArray())
-            );
-        }
-
-        throw new \Exception('删除失败！');
+        return $this->customer->destroy($id);
     }
 }

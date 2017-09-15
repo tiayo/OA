@@ -23,40 +23,14 @@ class GroupController extends Controller
      *
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
-    public function listView($page)
+    public function listView($keyword = null)
     {
         $num = config('site.list_num');
 
-        $groups = $this->group->get($page, $num);
+        $groups = $this->group->get($num, $keyword);
 
         return view('admin.group.list', [
             'groups' => $groups,
-            'page' => $page == 1 ? 2 : $page,
-            'current' =>  $page,
-            'num' => $num,
-            'count' => ceil($this->group->countGet() / $num),
-            'sign' => 'list'
-        ]);
-    }
-
-    /**
-     * 搜索记录
-     *
-     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
-     */
-    public function search($page, $keyword)
-    {
-        $num = config('site.list_num');
-
-        $groups = $this->group->get($page, $num, $keyword);
-
-        return view('admin.group.list', [
-            'groups' => $groups['data'],
-            'page' => $page == 1 ? 2 : $page,
-            'current' =>  $page,
-            'num' => $num,
-            'count' => ceil($this->group->countGet() / $num),
-            'sign' => 'search'
         ]);
     }
 
@@ -67,7 +41,10 @@ class GroupController extends Controller
      */
     public function addView()
     {
+        $salesmans = $this->group->getAllSalesman();
+
         return view('admin.group.add_or_update', [
+            'salesmans' => $salesmans,
             'old_input' => $this->request->session()->get('_old_input'),
             'url' => Route('group_add'),
             'sign' => 'add',
@@ -81,6 +58,8 @@ class GroupController extends Controller
      */
     public function updateView($id)
     {
+        $salesmans = $this->group->getAllSalesman();
+
         if ($this->request->session()->has('_old_input')) {
             //从session获取
             $old_input = session('_old_input');
@@ -90,6 +69,7 @@ class GroupController extends Controller
         }
 
         return view('admin.group.add_or_update', [
+            'salesmans' => $salesmans,
             'old_input' => $old_input,
             'url' => Route('group_update', ['id' => $id]),
             'sign' => 'update',
@@ -106,14 +86,15 @@ class GroupController extends Controller
     {
         //初步验证
         $this->validate($this->request, [
-            'salesman_id' => 'required|integer',
             'name' => 'required',
+            'salesman_id' => 'required|integer',
         ]);
 
-        //执行更新操作
-        $this->group->updateOrCreate($this->request->all(), $id);
+        if ($this->group->updateOrCreate($this->request->all(), $id)) {
+            return redirect()->route('group_list');
+        }
 
-        return redirect()->route('group_list_simple');
+        return response('添加/更新失败！');
     }
 
     /**
@@ -124,10 +105,10 @@ class GroupController extends Controller
      */
     public function destroy($id)
     {
-        if (!$this->group->destroy($id)) {
-            return response('删除失败！');
+        if ($this->group->destroy($id)) {
+            return redirect()->route('group_list');
         }
 
-        return redirect()->route('group_list_simple');
+        return response('删除失败，请确认分组存在或清空组下所有账户！');
     }
 }

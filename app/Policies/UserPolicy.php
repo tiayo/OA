@@ -2,20 +2,18 @@
 
 namespace App\Policies;
 
+use App\Repositories\GroupRepository;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class UserPolicy
 {
     use HandlesAuthorization;
 
-    /**
-     * Create a new policy instance.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
+    protected $group;
 
+    public function __construct(GroupRepository $group)
+    {
+        $this->group = $group;
     }
 
     public function admin($user)
@@ -33,6 +31,11 @@ class UserPolicy
         return $user['type'] == 1 || $user['type'] == 2;
     }
 
+    public function user($user)
+    {
+        return $user['type'] == 0;
+    }
+
     /**
      * 是否可以控制当前客户记录
      * 允许管理员跨过权限操作
@@ -48,8 +51,13 @@ class UserPolicy
             return true;
         }
 
-        //自己的业务员
-        if ($user['id'] == $salesman['parent_id']) {
+        if ($user['id'] == $salesman['id']) {
+            return false;
+        }
+
+        $group_id = $this->group->selectFirst([['salesman_id', '=', $user['id']]], 'id')['id'];
+
+        if ($salesman['group'] == $group_id) {
             return true;
         }
 

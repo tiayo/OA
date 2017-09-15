@@ -28,136 +28,148 @@ class CustomerRepository
         //删除redis缓存
         return $this->redis->redisMultiDelete('all_customer');
     }
-    
-    public function get($page, $num)
-    {
-        $customers = $this->getValue();
-
-        return array_slice($customers, ($page-1)*$num, $num);
-    }
 
     /**
-     * 获取负责人及下级业务员的所有客户
+     * 获取所有显示记录（调度）
      *
-     * @return array
+     * @param $num
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
-    public function getValue()
+    public function get($num)
     {
-        //读redis缓存
-        $redis = $this->redis->redisSingleGet('all_customer:'.Auth::id());
-
-        if (empty($redis))
-        {
-            //初始化
-            $redis = [];
-
-            //超级管理员获取全部
-            if (Auth::user()->can('admin', User::class))
-            {
-                $redis = $this->getAll();
-            } else {
-                //初始化
-                $result = [];
-
-                //加入下级
-                $salesmans = $this->salesman->getChildren(Auth::id(), 'id', 'parent_id');
-
-                //加入自己
-                $salesmans[] = ['id' => Auth::id()];
-
-                //获取所有客户
-                foreach ($salesmans as $salesman) {
-
-                    //获取单个业务员的客户
-                    $data = $this->getCustomerBysalesmanId($salesman['id']);
-
-                    empty($data) ? : $result[] = $data;
-                }
-
-                //整理格式
-                foreach ($result as $value) {
-                    foreach ($value as $item) {
-                        $redis[] =  $item;
-                    }
-                }
-            }
-
-            //写入redis
-            $this->redis->redisSingleAdd('all_customer:'.Auth::id(), serialize($redis), 1800);
-
-            return $redis;
-        }
-
-        return unserialize($redis);
+        return can('admin') ? $this->adminGet($num) :
+            (can('user') ? $this->userGet($num) : $this->manageGet($num));
     }
 
     /**
-     * 获取单个业务员客户
-     *
-     * @param $salesman_id
-     * @return array
-     */
-    public function getCustomerBysalesmanId($salesman_id)
-    {
-        return $this->customer
-            ->select('customers.*', 'users.name as salesman_name')
-            ->join('users', 'customers.salesman_id', 'users.id')
-            ->where('salesman_id', $salesman_id)
-            ->get()
-            ->toArray();
-    }
-
-    /**
-     * 获取所有客户
-     *
-     * @return array
-     */
-    public function getAll()
-    {
-        return $this->customer
-            ->select('customers.*', 'users.name as salesman_name')
-            ->join('users', 'customers.salesman_id', 'users.id')
-            ->orderBy('id', 'desc')
-            ->get()
-            ->toArray();
-    }
-
-    /**
-     * 获取客户数量
-     *
-     * @return int
-     */
-    public function countGet()
-    {
-        return count($this->getValue());
-    }
-
-    /**
-     * 获取搜索结果
+     * 获取所有显示记录（用户级别）
      *
      * @param $page
      * @param $num
-     * @param $keyword
-     * @return array
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
-    public function getSearch($page, $num, $keyword)
+    public function userGet($num)
     {
-        $customers = $this->getValue();
+        return $this->customer
+            ->select('customers.*', 'users.name as salesman_name')
+            ->join('users', 'users.id', 'customers.salesman_id')
+            ->where('customers.salesman_id', Auth::id())
+            ->orderBy('customers.id', 'desc')
+            ->paginate($num);
+    }
 
-        $result = [];
+    /**
+     * 获取所有显示记录（组长级别）
+     *
+     * @param $page
+     * @param $num
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     */
+    public function manageGet($num)
+    {
+        return $this->customer
+            ->select('customers.*', 'users.name as salesman_name')
+            ->join('users', 'users.id', 'customers.salesman_id')
+            ->where('users.group', Auth::user()['group'])
+            ->orderBy('customers.id', 'desc')
+            ->paginate($num);
+    }
 
-        foreach ($customers as $salesman) {
-            if (
-                strpos($salesman['name'], $keyword) !== false ||
-                strpos($salesman['phone'], $keyword) !== false ||
-                strpos($salesman['company'], $keyword) !== false ||
-                strpos($salesman['wx'], $keyword) !== false
-            ) {
-                $result[] = $salesman;
-            }
-        }
+    /**
+     * 获取所有显示记录（超级管理员级别）
+     *
+     * @param $page
+     * @param $num
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     */
+    public function adminGet($num)
+    {
+        return $this->customer
+            ->select('customers.*', 'users.name as salesman_name')
+            ->leftjoin('users', 'users.id', 'customers.salesman_id')
+            ->orderBy('customers.id', 'desc')
+            ->paginate($num);
+    }
 
-        return ['data' => array_slice($result, ($page-1)*$num, $num), 'count' => count($result)];
+    /**
+     * 获取显示的搜索结果（调度）
+     *
+     * @param $num
+     * @param $keyword
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     */
+    public function getSearch($num, $keyword)
+    {
+        return can('admin') ? $this->getAdminSearch($num, $keyword) :
+            (can('user') ? $this->getUserSearch($num, $keyword) : $this->getManageSearch($num, $keyword));
+    }
+
+    /**
+     * 获取显示的搜索结果（用户级）
+     *
+     * @param $num
+     * @param $keyword
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     */
+    public function getUserSearch($num, $keyword)
+    {
+        return $this->customer
+            ->select('customers.*', 'users.name as salesman_name')
+            ->join('users', 'users.id', 'customers.salesman_id')
+            ->where('customers.salesman_id', Auth::id())
+            ->where(function ($query) use ($keyword) {
+                $query->where('customers.name', 'like', "%$keyword%")
+                    ->orwhere('customers.wx', 'like', "%$keyword%")
+                    ->orwhere('customers.phone', 'like', "%$keyword%")
+                    ->orwhere('customers.company', 'like', "%$keyword%");
+            })
+            ->orderBy('customers.id', 'desc')
+            ->paginate($num);
+    }
+
+    /**
+     * 获取显示的搜索结果（组长级）
+     *
+     * @param $num
+     * @param $keyword
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     */
+    public function getManageSearch($num, $keyword)
+    {
+        return $this->customer
+            ->select('customers.*', 'users.name as salesman_name')
+            ->join('users', 'users.id', 'customers.salesman_id')
+            ->where('users.group', Auth::user()['group'])
+            ->where(function ($query) use ($keyword) {
+                $query->where('customers.name', 'like', "%$keyword%")
+                    ->orwhere('customers.wx', 'like', "%$keyword%")
+                    ->orwhere('customers.phone', 'like', "%$keyword%")
+                    ->orwhere('customers.company', 'like', "%$keyword%");
+            })
+            ->orderBy('customers.id', 'desc')
+            ->paginate($num);
+    }
+
+    /**
+     * 获取显示的搜索结果（超级管理员级）
+     *
+     * @param $num
+     * @param $keyword
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     */
+    public function getAdminSearch($num, $keyword)
+    {
+        return $this->customer
+            ->select('customers.*', 'users.name as salesman_name')
+            ->leftjoin('users', 'users.id', 'customers.salesman_id')
+            ->where(function ($query) use ($keyword) {
+                $query->where('customers.name', 'like', "%$keyword%")
+                    ->orwhere('customers.wx', 'like', "%$keyword%")
+                    ->orwhere('customers.phone', 'like', "%$keyword%")
+                    ->orwhere('customers.company', 'like', "%$keyword%");
+            })
+            ->orderBy('customers.id', 'desc')
+            ->paginate($num);
     }
     
     public function first($id)

@@ -34,6 +34,7 @@
 		                    <th>帐号</th>
 		                    <th>邮箱</th>
                             <th>类型</th>
+                            <th>所属分组</th>
                             <th>创建时间</th>
 							<th>操作</th>
 		                </tr>
@@ -54,6 +55,7 @@
                                     组长
                                 @endif
                             </td>
+                            <td>{{ $user['group_name'] or '暂无'}}</td>
                             <td>{{ $user['created_at'] }}</td>
                             <td>
                                 <button class="btn btn-info" type="button" onclick="location='{{ route('salesman_update', ['id' => $user['id'] ]) }}'">编辑</button>
@@ -63,11 +65,8 @@
                         @endforeach
                     </tbody>
 		        </table>
-                @if(!empty($page))
-                    <ul class="pagination pull-left">
 
-                    </ul>
-                @endif
+               {{ $salesman->links() }}
             </div>
     	</section>
     </div>
@@ -76,37 +75,34 @@
 
 @section('script')
     @parent
-    @if(!empty($page))
-        <script type="text/javascript">
-            $(function(){
+    {{--转换搜索链接--}}
+    <script type="text/javascript">
+        $(document).ready(function () {
 
-                $('#salesman_form').submit(function () {
-                    var keyword = $('#search').val();
+            $('#salesman_form').submit(function () {
 
-                    window.location='{{ route('salesman_search', ['page' => 1, 'keyword' => '']) }}/'+keyword;
+                var keyword = $('#search').val();
 
+                if (stripscript(keyword) == '') {
+                    $('#search').val('');
                     return false;
-                });
+                }
 
-                $(".pagination").createPage({
-                    totalPage:{{ $count }},
-                    currPage:{{ $current }},
-                    @if($sign == 'search')
-                        url:"{{ route('salesman_search_simple') }}",
-                        keyword:"{{ Request::route('keyword') }}",
-                    @else
-                        url:"{{ route('salesman_list_simple') }}",
-                    @endif
-                    backFn:function(p){
-                        console.log("回调函数："+p);
-                    }
-                });
+                window.location = '{{ route('salesman_search', ['keyword' => '']) }}/' + stripscript(keyword);
+
+                return false;
             });
-        </script>
-        @if($sign == 'search')
-            <script src="{{ asset('style/js/pagingSearch.js') }}"></script>
-            @else
-            <script src="{{ asset('style/js/paging.js') }}"></script>
-        @endif
-    @endif
+
+        });
+
+        function stripscript(s)
+        {
+            var pattern = new RegExp("[`~!@#$^&*()=|{}':;',\\[\\].<>/?~！@#￥……&*（）——|{}【】‘；：”“'。，、？]");
+            var rs = "";
+            for (var i = 0; i < s.length; i++) {
+                rs = rs+s.substr(i, 1).replace(pattern, '');
+            }
+            return rs;
+        }
+    </script>
 @endsection

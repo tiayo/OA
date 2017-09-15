@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\Admin\GroupService;
 use App\Services\Admin\SalesmanService;
 use App\User;
 use Illuminate\Http\Request;
@@ -12,13 +13,13 @@ class SalesmanController extends Controller
 {
     protected $salesman;
     protected $request;
+    protected $group;
 
-    public function __construct(SalesmanService $salesman, Request $request)
+    public function __construct(SalesmanService $salesman, Request $request, GroupService $group)
     {
-        $this->middleware('salesman_control');
-
         $this->salesman = $salesman;
         $this->request = $request;
+        $this->group = $group;
     }
 
     /**
@@ -26,41 +27,14 @@ class SalesmanController extends Controller
      *
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
-    public function listView($page)
+    public function listView($keyword = null)
     {
         $num = config('site.list_num');
 
-        $salesman = $this->salesman->get($page, $num);
+        $salesman = $this->salesman->get($num, $keyword);
 
         return view('admin.salesman.list', [
             'salesman' => $salesman,
-            'page' => $page == 1 ? 2 : $page,
-            'current' =>  $page,
-            'num' => $num,
-            'count' => ceil($this->salesman->countGet() / $num),
-            'sign' => 'list',
-        ]);
-    }
-
-    /**
-     * 搜索记录
-     * #因为姓名邮箱都唯一，所以这里只获取一条
-     *
-     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
-     */
-    public function search($page, $keyword)
-    {
-        $num = config('site.list_num');
-
-        $salesman = $this->salesman->get($page, $num, $keyword);
-
-        return view('admin.salesman.list', [
-            'salesman' => $salesman['data'],
-            'page' => $page == 1 ? 2 : $page,
-            'current' =>  $page,
-            'num' => $num,
-            'count' => ceil($salesman['count'] / $num),
-            'sign' => 'search',
         ]);
     }
 
@@ -71,7 +45,10 @@ class SalesmanController extends Controller
      */
     public function addView()
     {
+        $groups = $this->group->get();
+
         return view('admin.salesman.add_or_update', [
+            'groups' => $groups,
             'old_input' => $this->request->session()->get('_old_input'),
             'url' => Route('salesman_add'),
             'sign' => 'add',
@@ -85,13 +62,17 @@ class SalesmanController extends Controller
      */
     public function updateView($id)
     {
+        $groups = $this->group->get();
+
         try {
-            $old_input = $this->request->session()->has('_old_input') ? session('_old_input') : $this->salesman->first($id);
+            $old_input = $this->request->session()->has('_old_input') ?
+                session('_old_input') : $this->salesman->first($id);
         } catch (\Exception $e) {
-            return response($e->getMessage());
+            return response($e->getMessage(), $e->getCode());
         }
 
         return view('admin.salesman.add_or_update', [
+            'groups' => $groups,
             'old_input' => $old_input,
             'url' => Route('salesman_update', ['id' => $id]),
             'sign' => 'update',
@@ -110,6 +91,7 @@ class SalesmanController extends Controller
             'email' => 'required|email',
             'password' => 'min:6',
             'type' => 'required',
+            'group' => 'integer',
         ]);
 
         //唯一性验证
@@ -126,7 +108,7 @@ class SalesmanController extends Controller
             return response($e->getMessage());
         }
 
-        return redirect()->route('salesman_list_simple');
+        return redirect()->route('salesman_list');
     }
 
     /**
@@ -137,8 +119,10 @@ class SalesmanController extends Controller
      */
     public function destroy($id)
     {
-        $this->salesman->destroy($id);
+        if ($this->salesman->destroy($id)) {
+            return redirect()->route('salesman_list');
+        }
 
-        return redirect()->route('salesman_list');
+        return response('删除失败！', 500);
     }
 }

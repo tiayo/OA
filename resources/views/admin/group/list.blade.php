@@ -7,8 +7,8 @@
 @endsection
 
 @section('breadcrumb')
-    <li navValue="nav_1"><a href="#">业务员操作</a></li>
-    <li navValue="nav_1_1"><a href="#">客户列表</a></li>
+    <li navValue="nav_0"><a href="#">管理员操作</a></li>
+    <li navValue="nav_0_4"><a href="#">业务员分组</a></li>
 @endsection
 
 @section('body')
@@ -17,10 +17,11 @@
 		<section class="panel">
             <div class="panel-body">
                 <form class="form-inline" id="group_form">
+                    <button type="button" class="btn btn-primary list-inline" onclick="location='{{ route('group_add') }}'">添加分组</button>
                     <div class="form-group">
                         <label class="sr-only" for="search"></label>
                         <input type="text" class="form-control" id="search" name="keyword"
-                               value="{{ Request::route('keyword') }}" placeholder="姓名、微信、手机、公司" required>
+                               value="{{ Request::route('keyword') }}" placeholder="分组名" required>
                     </div>
                     <button type="submit" class="btn btn-primary">搜索</button>
                 </form>
@@ -31,13 +32,9 @@
 		            <thead>
 		                <tr>
 		                    <th>ID</th>
-		                    <th>姓名</th>
-                            <th>业务员</th>
-                            <th>微信</th>
-                            <th>手机</th>
-                            <th>公司</th>
-                            <th>备注</th>
-                            <th>添加时间</th>
+		                    <th>分组名</th>
+                            <th>管理员</th>
+                            <th>创建时间</th>
 							<th>操作</th>
 		                </tr>
 		            </thead>
@@ -48,10 +45,6 @@
                             <td>{{ $group['id'] }}</td>
                             <td>{{ $group['name'] }}</td>
                             <td>{{ $group['salesman_name'] }}</td>
-                            <td>{{ $group['wx'] }}</td>
-                            <td>{{ $group['phone'] }}</td>
-                            <td>{{ $group['company'] }}</td>
-                            <td>{{ $group['remark'] }}</td>
                             <td>{{ $group['created_at'] }}</td>
                             <td>
                                 <button class="btn btn-info" type="button" onclick="location='{{ route('group_update', ['id' => $group['id'] ]) }}'">编辑</button>
@@ -61,9 +54,7 @@
                         @endforeach
                     </tbody>
 		        </table>
-                <ul class="pagination pull-left">
-
-                </ul>
+                {{ $groups->links() }}
             </div>
     	</section>
     </div>
@@ -84,23 +75,9 @@
                         return false;
                     }
 
-                    window.location='{{ route('group_search', ['page' => 1, 'keyword' => '']) }}/' + stripscript(keyword);
+                    window.location='{{ route('group_search', ['keyword' => '']) }}/' + stripscript(keyword);
 
                     return false;
-                });
-
-                $(".pagination").createPage({
-                    totalPage:{{ $count }},
-                    currPage:{{ $current }},
-                    @if($sign == 'search')
-                    url:"{{ route('group_search_simple') }}",
-                    keyword:"{{ Request::route('keyword') }}",
-                    @else
-                    url:"{{ route('group_list_simple') }}",
-                    @endif
-                    backFn:function(p){
-                        console.log("回调函数："+p);
-                    }
                 });
             });
         });
@@ -115,9 +92,4 @@
             return rs;
         }
     </script>
-    @if($sign == 'search')
-        <script src="{{ asset('style/js/pagingSearch.js') }}"></script>
-    @else
-        <script src="{{ asset('style/js/paging.js') }}"></script>
-    @endif
 @endsection

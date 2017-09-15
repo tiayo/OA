@@ -61,9 +61,7 @@
                         @endforeach
                     </tbody>
 		        </table>
-                <ul class="pagination pull-left">
-
-                </ul>
+                {{ $customers->links() }}
             </div>
     	</section>
     </div>
@@ -72,37 +70,24 @@
 
 @section('script')
     @parent
+    {{--转换搜索链接--}}
     <script type="text/javascript">
-        $(function(){
-            $(function(){
+        $(document).ready(function () {
 
-                $('#customer_form').submit(function () {
-                    var keyword = $('#search').val();
+            $('#customer_form').submit(function () {
 
-                    if (stripscript(keyword) == '') {
-                        $('#search').val('');
-                        return false;
-                    }
+                var keyword = $('#search').val();
 
-                    window.location='{{ route('customer_search', ['page' => 1, 'keyword' => '']) }}/' + stripscript(keyword);
-
+                if (stripscript(keyword) == '') {
+                    $('#search').val('');
                     return false;
-                });
+                }
 
-                $(".pagination").createPage({
-                    totalPage:{{ $count }},
-                    currPage:{{ $current }},
-                    @if($sign == 'search')
-                    url:"{{ route('customer_search_simple') }}",
-                    keyword:"{{ Request::route('keyword') }}",
-                    @else
-                    url:"{{ route('customer_list_simple') }}",
-                    @endif
-                    backFn:function(p){
-                        console.log("回调函数："+p);
-                    }
-                });
+                window.location = '{{ route('customer_search', ['keyword' => '']) }}/' + stripscript(keyword);
+
+                return false;
             });
+
         });
 
         function stripscript(s)
@@ -115,9 +100,4 @@
             return rs;
         }
     </script>
-    @if($sign == 'search')
-        <script src="{{ asset('style/js/pagingSearch.js') }}"></script>
-    @else
-        <script src="{{ asset('style/js/paging.js') }}"></script>
-    @endif
 @endsection
