@@ -56,6 +56,9 @@ Route::group(['namespace' => 'Admin', 'prefix' => 'admin'], function () {
             Route::get('/group/update/{id}', 'GroupController@updateView')->name('group_update');
             Route::post('/group/update/{id}', 'GroupController@post');
             Route::get('/group/destroy/{id}', 'GroupController@destroy')->name('group_destroy');
+
+            //分组查看客户
+            Route::get('/customer/list/group/{group}', 'CustomerController@groupView')->name('customer_group');
         });
 
         // ---------------------------业务员操作--------------------------- //

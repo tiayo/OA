@@ -49,6 +49,16 @@ class CustomerService
     }
 
     /**
+     * 获取需要的数据
+     *
+     * @return mixed
+     */
+    public function getGroup($num = 10000, $group)
+    {
+        return $this->customer->getGroup($num, $group);
+    }
+
+    /**
      * 查找指定id的用户
      *
      * @param $id

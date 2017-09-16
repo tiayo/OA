@@ -34,6 +34,23 @@ class CustomerController extends Controller
     }
 
     /**
+     * 根据分组查看客户
+     *
+     * @param $group
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     */
+    public function groupView($group)
+    {
+        $num = config('site.list_num');
+
+        $customers = $this->customer->getGroup($num, $group);
+
+        return view('admin.customer.list', [
+            'customers' => $customers,
+        ]);
+    }
+
+    /**
      * 添加管理员视图
      *
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
