@@ -59,7 +59,7 @@ class GroupService
         //获取原用户
         empty($id) ? $option = 2 : $origin = $this->first($id)->toArray();
 
-        $group_id  = empty($id) ? $this->group->create($data)->id : $this->group->update($id, $data);
+        $group_id  = empty($id) ? $this->group->create($data)->id : ($this->group->update($id, $data)) ? $id : 0;
 
         //更新或插入用户
         $this->updateGroup($group_id, $new_user_id, $origin['salesman_id'] ?? 0);
