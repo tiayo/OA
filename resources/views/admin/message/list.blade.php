@@ -26,7 +26,8 @@
 		                    <th>类型</th>
                             <th>操作</th>
                             <th>业务员</th>
-							<th>内容</th>
+							<th>现内容</th>
+                            <th>原内容</th>
 							<th>创建时间</th>
                             <th>状态</th>
                             <th>操作</th>
@@ -44,6 +45,8 @@
                                     客户
                                 @elseif($message['type'] == 'visit')
                                     客户跟踪记录
+                                @elseif($message['type'] == 'salesman')
+                                    业务员
                                 @endif
                             <td>
                                 @if ($message['option'] == 1)
@@ -57,6 +60,11 @@
                             <td>{{ $message['salesman_name'] }}</td>
                             <td>
                                 @foreach(unserialize($message['content']) as $key => $message_content)
+                                    {{ $key }}:{{ $message_content }} <br>
+                                @endforeach
+                            </td>
+                            <td>
+                                @foreach(unserialize($message['origin']) as $key => $message_content)
                                     {{ $key }}:{{ $message_content }} <br>
                                 @endforeach
                             </td>

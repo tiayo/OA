@@ -49,7 +49,7 @@ class GroupService
      *
      * @param $post
      * @param null $id
-     * @return mixed
+     * @return array|null
      */
     public function updateOrCreate($post, $id = null)
     {
@@ -69,8 +69,7 @@ class GroupService
             'group',
             $option ?? 1,
             $data,
-            $origin ?? [],
-            $id
+            $origin ?? []
         ));
     }
 
@@ -108,7 +107,14 @@ class GroupService
             return false;
         }
 
-        return $this->group->destroy($id);
+        //获取删除前数据
+        $origin = $this->first($id)->toArray();
+
+        //执行删除
+        $this->group->destroy($id);
+
+        //执行写入消息事件
+        return event(new AddMessage('group', 3, [], $origin));
     }
 
     /**

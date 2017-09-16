@@ -96,8 +96,7 @@ class CustomerService
             'customer',
             $option ?? 1,
             $data,
-            $origin ?? [],
-            $id
+            $origin ?? []
         ));
     }
 
@@ -143,8 +142,12 @@ class CustomerService
     public function destroy($id)
     {
         //验证是否可以操作当前记录
-        $this->validata($id);
+        $origin = $this->validata($id)->toArray();
 
-        return $this->customer->destroy($id);
+        //执行删除
+        $this->customer->destroy($id);
+
+        //执行写入消息事件
+        return event(new AddMessage('customer', 3, [], $origin));
     }
 }

@@ -119,10 +119,12 @@ class SalesmanController extends Controller
      */
     public function destroy($id)
     {
-        if ($this->salesman->destroy($id)) {
-            return redirect()->route('salesman_list');
+        try {
+            $this->salesman->destroy($id);
+        } catch (\Exception $e) {
+            return response($e->getMessage(), 500);
         }
 
-        return response('删除失败！', 500);
+        return redirect()->route('salesman_list');
     }
 }

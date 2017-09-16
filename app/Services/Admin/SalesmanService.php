@@ -2,6 +2,7 @@
 
 namespace App\Services\Admin;
 
+use App\Events\AddMessage;
 use App\Repositories\UsersRepository;
 use Illuminate\Support\Facades\Auth;
 use Exception;
@@ -69,25 +70,37 @@ class SalesmanService
     public function updateOrCreate($post, $id = null)
     {
         //验证是否可以操作当前记录
-        empty($id) ? : $this->validata($id);
+        empty($id) ? $option = 2 : $origin = $this->validata($id)->toArray();
 
         //统计数据
-        $add['name'] = $post['name'];
-        $add['email'] = $post['email'];
-        $add['type'] = $post['type'];
+        $data['name'] = $post['name'];
+        $data['email'] = $post['email'];
+        $data['type'] = $post['type'];
 
         //创建时指定分组
-        $add['group'] = $post['group'] ?? Auth::user()['group'];
+        $data['group'] = $post['group'] ?? Auth::user()['group'];
 
         //密码
         if (isset($post['password'])) {
-            $add['password'] = bcrypt($post['password']);
+            $data['password'] = bcrypt($post['password']);
         } else if(empty($id) && $id !== 0) {
             //默认密码
-            $add['password'] = bcrypt('Abcd.123');
+            $data['password'] = bcrypt('Abcd.123');
         }
 
-        return $this->user->updateOrCreate($add, $id);
+        //执行操作
+        $this->user->updateOrCreate($data, $id);
+
+        //删除密码
+        unset($data['password']);
+
+        //执行写入消息事件
+        return event(new AddMessage(
+            'salesman',
+            $option ?? 1,
+            $data,
+            $origin ?? []
+        ));
     }
 
     /**
@@ -99,9 +112,13 @@ class SalesmanService
     public function destroy($id)
     {
         //验证是否可以操作当前记录
-        $this->validata($id);
+        $orgin = $this->validata($id)->toArray();
 
-        return $this->user->destroy($id);
+        //执行删除
+        $this->user->destroy($id);
+
+        //执行写入消息事件
+        return event(new AddMessage('salesman', 3, [], $orgin));
     }
 
     public function countGroup($group_id)

@@ -180,7 +180,7 @@ class VisitRepository
     public function first($id)
     {
         return $this->visit
-            ->join('customers', 'visits.customer_id', 'customers.id')
+            ->leftjoin('customers', 'visits.customer_id', 'customers.id')
             ->select('visits.*', 'customers.name as customer_name')
             ->find($id);
     }
@@ -237,8 +237,11 @@ class VisitRepository
         return $this->visit_chunk;
     }
 
-    public function find($id)
+    public function selectFirst($where, ...$select)
     {
-        return $this->visit->find($id);
+        return $this->visit
+            ->select($select)
+            ->where($where)
+            ->first();
     }
 }

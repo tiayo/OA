@@ -2,11 +2,10 @@
 
 namespace App\Services;
 
+use App\Events\AddMessage;
 use App\Repositories\VisitRepository;
 use App\Services\Admin\CustomerService;
-use App\User;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
+use Exception;
 
 class VisitService
 {
@@ -17,6 +16,25 @@ class VisitService
     {
         $this->visit = $visit;
         $this->customer = $customer;
+    }
+
+    /**
+     * 通过id验证记录是否存在以及是否有操作权限
+     * 通过：返回该记录
+     * 否则：抛错
+     *
+     * @param $id
+     * @return \Illuminate\Database\Eloquent\Collection|\Illuminate\Database\Eloquent\Model|null|static|static[]
+     */
+    public function validata($id)
+    {
+        $visit = $this->visit->first($id);
+
+        throw_if(empty($visit), Exception::class, '未找到该记录！', 404);
+
+        throw_if(!can('control', $visit), Exception::class, '没有权限！', 403);
+
+        return $visit;
     }
 
     /**
@@ -42,7 +60,7 @@ class VisitService
     public function first($id)
     {
         //获取当前客户
-        return $this->visit->first($id);
+        return $this->validata($id);
     }
 
     /**
@@ -54,28 +72,30 @@ class VisitService
      */
     public function updateOrCreate($post, $id = null)
     {
-        $add['record'] = $post['record'] ?? null;
+        $data['record'] = $post['record'] ?? null;
 
         if (empty($id)) {
-            $add['salesman_id'] = $this->customer->first($post['customer_id'])['salesman_id'];
-            $add['customer_id'] = $post['customer_id'];
+            //验证是否可以操作当前记录
+            $origin = $this->validata($id)->toArray();
+
+            //标记操作
+            $option = 2;
+
+            //构造数据
+            $data['salesman_id'] = $origin['salesman_id'];
+            $data['customer_id'] = $post['customer_id'];
         }
 
-        if (!empty($id) && !Auth::user()->can('control', $visit = $this->visit->find($id))) {
-            throw new \Exception('不是您的客户！');
-        }
+        //执行操作
+        $this->visit->updateOrCreate($data, $id);
 
-        $this->visit->updateOrCreate($add, $id);
-
-        if (!empty($id) && !empty($visit)) {
-            return Log::info(
-                "用户："
-                . Auth::user()['name'] . "(" . Auth::id() .
-                ")更新原回访记录:" .
-                json_encode($visit->toArray()) .
-                "现在回访记录:" . json_encode($this->visit->find($id)->toArray())
-            );
-        }
+        //执行写入消息事件
+        return event(new AddMessage(
+            'visit',
+            $option ?? 1,
+            $data,
+            $origin ?? []
+        ));
     }
 
     /**
@@ -86,26 +106,13 @@ class VisitService
      */
     public function destroy($id)
     {
-        $visit = $this->visit->find($id);
+        //验证是否可以操作当前记录
+        $origin = $this->validata($id)->toArray();
 
-        if (empty($visit)) {
-            throw new \Exception('没有查询到客户！');
-        }
+        //执行删除
+        $this->visit->destroy($id);
 
-        //验证操作权限
-        if (!Auth::user()->can('control', $visit)) {
-            throw new \Exception('不是您的客户！');
-        }
-
-        if ($this->visit->destroy($id)) {
-            return Log::info(
-                "用户：" .
-                Auth::user()['name'] . "(" . Auth::id() .
-                ")删除了回访记录:" .
-                json_encode($visit->toArray())
-            );
-        }
-
-        throw new \Exception('删除失败！');
+        //执行写入消息事件
+        return event(new AddMessage('visit', 3, [], $origin));
     }
 }

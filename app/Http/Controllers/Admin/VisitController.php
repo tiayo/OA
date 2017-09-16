@@ -24,8 +24,6 @@ class VisitController extends Controller
                                 SalesmanService $salesman,
                                 GroupService $group)
     {
-        $this->middleware('visit_control');
-
         $this->visit = $visit;
         $this->request = $request;
         $this->customer = $customer;
@@ -93,12 +91,11 @@ class VisitController extends Controller
      */
     public function updateView($id)
     {
-        //从session获取
-        $old_input = session('_old_input');
-
-        if (empty($old_input)) {
-            //从数据库获取
-            $old_input = $this->visit->first($id);
+        try {
+            $old_input = $this->request->session()->has('_old_input') ?
+                session('_old_input') : $this->visit->first($id);
+        } catch (\Exception $e) {
+            return response($e->getMessage(), $e->getCode());
         }
 
         return view('admin.visit.add_or_update', [
