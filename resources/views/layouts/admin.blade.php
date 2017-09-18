@@ -1,4 +1,5 @@
 @inject('app_messgae', '\App\Services\Admin\MessageService')
+{{ $messgaes = $app_messgae->getRemind(5) }}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -63,7 +64,7 @@
                     @if(can('admin'))
                         <li>
                             <a href="#" class="btn btn-default dropdown-toggle info-number" data-toggle="dropdown">
-                                <i class="fa fa-bell-o"></i><i class="hidden">{{ $messgaes = $app_messgae->getRemind(5) }}</i>
+                                <i class="fa fa-bell-o"></i>
                                 <span class="badge">{{ $messgaes->total() }}</span>
                             </a>
                             <div class="dropdown-menu dropdown-menu-head pull-right">
