@@ -1,5 +1,9 @@
+{{--服务注入--}}
 @inject('app_messgae', '\App\Services\Admin\MessageService')
-@if($messgaes = $app_messgae->getRemind(5))@endif
+{{--公共赋值--}}
+@php
+    $messgaes = $app_messgae->getRemind(5);
+@endphp
 
 <!DOCTYPE html>
 <html lang="en">
