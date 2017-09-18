@@ -1,5 +1,6 @@
 @inject('app_messgae', '\App\Services\Admin\MessageService')
-{{ $messgaes = $app_messgae->getRemind(5) }}
+@if($messgaes = $app_messgae->getRemind(5))@endif
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
