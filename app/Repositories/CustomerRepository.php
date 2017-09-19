@@ -215,8 +215,7 @@ class CustomerRepository
         return $this->customer
             ->where('id', '<>', $id)
             ->where(function ($query) use($post) {
-                $query->where('name', $post['name'])
-                    ->orWhere(function ($query) use ($post) {
+                $query->Where(function ($query) use ($post) {
                         $query->where('phone', $post['phone'])
                             ->where('phone', '<>', '无');
                     })
