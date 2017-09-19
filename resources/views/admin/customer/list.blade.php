@@ -32,8 +32,9 @@
                         <div class="btn-group">
                             <button data-toggle="dropdown" class="btn btn-success dropdown-toggle" type="button">根据业务员查看 <span class="caret"></span></button>
                             <ul role="menu" class="dropdown-menu">
+                                <li><a href="{{ route('customer_by_salesman', ['salesman' => Auth::id() ]) }}">我</a></li>
                                 @foreach($salesmans as $salesman)
-                                    <li><a href="{{ route('customer_by_salesman', ['group' => $salesman['id'] ]) }}">{{ $salesman['name'] }}</a></li>
+                                    <li><a href="{{ route('customer_by_salesman', ['salesman' => $salesman['id'] ]) }}">{{ $salesman['name'] }}</a></li>
                                 @endforeach
                             </ul>
                         </div>
