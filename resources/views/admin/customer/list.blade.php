@@ -17,6 +17,28 @@
 		<section class="panel">
             <div class="panel-body">
                 <form class="form-inline" id="customer_form">
+                    @if(can('admin'))
+                        <div class="btn-group">
+                            <button data-toggle="dropdown" class="btn btn-success dropdown-toggle" type="button">根据分组查看 <span class="caret"></span></button>
+                            <ul role="menu" class="dropdown-menu">
+                                @foreach($groups as $group)
+                                    <li><a href="{{ route('customer_by_group', ['group' => $group['id'] ]) }}">{{ $group['name'] }}</a></li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+
+                    @if(can('manage'))
+                        <div class="btn-group">
+                            <button data-toggle="dropdown" class="btn btn-success dropdown-toggle" type="button">根据业务员查看 <span class="caret"></span></button>
+                            <ul role="menu" class="dropdown-menu">
+                                @foreach($salesmans as $salesman)
+                                    <li><a href="{{ route('customer_by_salesman', ['group' => $salesman['id'] ]) }}">{{ $salesman['name'] }}</a></li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+
                     <div class="form-group">
                         <label class="sr-only" for="search"></label>
                         <input type="text" class="form-control" id="search" name="keyword"
@@ -61,6 +83,7 @@
                         @endforeach
                     </tbody>
 		        </table>
+                <div class="dataTables_info">当前共{{ $customers->total() }}个客户  当前显示第{{ $customers->currentPage() }}页</div>
                 {{ $customers->links() }}
             </div>
     	</section>

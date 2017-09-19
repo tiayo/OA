@@ -39,6 +39,9 @@ Route::group(['namespace' => 'Admin', 'prefix' => 'admin'], function () {
 
             //删除客户
             Route::get('/visit/destroy/{id}', 'VisitController@destroy')->name('visit_destroy');
+
+            //根据业务员查看客户
+            Route::get('/customer/list/salemans/{salesman}', 'CustomerController@listBySalesman')->name('customer_by_salesman');
         });
 
         // ---------------------------超级管理操作--------------------------- //
@@ -57,8 +60,8 @@ Route::group(['namespace' => 'Admin', 'prefix' => 'admin'], function () {
             Route::post('/group/update/{id}', 'GroupController@post');
             Route::get('/group/destroy/{id}', 'GroupController@destroy')->name('group_destroy');
 
-            //分组查看客户
-            Route::get('/customer/list/group/{group}', 'CustomerController@groupView')->name('customer_group');
+            //根据分组查看客户
+            Route::get('/customer/list/group/{group}', 'CustomerController@listByGroup')->name('customer_by_group');
         });
 
         // ---------------------------业务员操作--------------------------- //

@@ -4,16 +4,25 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Services\Admin\CustomerService;
+use App\Services\Admin\GroupService;
+use App\Services\Admin\SalesmanService;
 use Illuminate\Http\Request;
 
 class CustomerController extends Controller
 {
     protected $customer;
+    protected $group;
+    protected $salesman;
     protected $request;
 
-    public function __construct(CustomerService $customer, Request $request)
+    public function __construct(CustomerService $customer,
+                                GroupService $group,
+                                SalesmanService $salesman,
+                                Request $request)
     {
         $this->customer = $customer;
+        $this->group = $group;
+        $this->salesman = $salesman;
         $this->request = $request;
     }
 
@@ -28,8 +37,14 @@ class CustomerController extends Controller
 
         $customers = $this->customer->get($num, $keyword);
 
+        $group = $this->group->get();
+
+        $salesmans = $this->salesman->get();
+
         return view('admin.customer.list', [
             'customers' => $customers,
+            'groups' => $group,
+            'salesmans' => $salesmans,
         ]);
     }
 
@@ -39,14 +54,43 @@ class CustomerController extends Controller
      * @param $group
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
-    public function groupView($group)
+    public function listByGroup($group)
     {
         $num = config('site.list_num');
 
-        $customers = $this->customer->getGroup($num, $group);
+        $customers = $this->customer->getByGroup($num, $group);
+
+        $group = $this->group->get();
+
+        $salesmans = $this->salesman->get();
 
         return view('admin.customer.list', [
             'customers' => $customers,
+            'groups' => $group,
+            'salesmans' => $salesmans,
+        ]);
+    }
+
+    /**
+     * 根据业务员查看客户
+     *
+     * @param $group
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     */
+    public function listBySalesman($salesman)
+    {
+        $num = config('site.list_num');
+
+        $customers = $this->customer->getBySalesman($num, $salesman);
+
+        $group = $this->group->get();
+
+        $salesmans = $this->salesman->get();
+
+        return view('admin.customer.list', [
+            'customers' => $customers,
+            'groups' => $group,
+            'salesmans' => $salesmans,
         ]);
     }
 

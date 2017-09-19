@@ -49,13 +49,25 @@ class CustomerService
     }
 
     /**
-     * 获取需要的数据
+     * 根据分组获取数据
      *
      * @return mixed
      */
-    public function getGroup($num = 10000, $group)
+    public function getByGroup($num = 10000, $group)
     {
-        return $this->customer->getGroup($num, $group);
+        //靠分组查看，模拟‘manageGet’方法，将分组传入获取数据
+        return $this->customer->manageGet($num, $group);
+    }
+
+    /**
+     * 根据业务员获取数据
+     *
+     * @return mixed
+     */
+    public function getBySalesman($num = 10000, $salesman)
+    {
+        //靠分组查看，模拟‘userGet’方法，将分组传入获取数据
+        return $this->customer->userGet($num, $salesman);
     }
 
     /**

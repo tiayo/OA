@@ -47,7 +47,7 @@
                             <td>{{ $group['salesman_name'] }}</td>
                             <td>{{ $group['created_at'] }}</td>
                             <td>
-                                <button class="btn btn-success" type="button" onclick="location='{{ route('customer_group', ['group' => $group['id'] ]) }}'">查看客户</button>
+                                <button class="btn btn-success" type="button" onclick="location='{{ route('customer_by_group', ['group' => $group['id'] ]) }}'">查看客户</button>
                                 <button class="btn btn-info" type="button" onclick="location='{{ route('group_update', ['id' => $group['id'] ]) }}'">编辑</button>
                                 <button class="btn btn-danger" type="button" onclick="javascript:if(confirm('确实要删除吗?'))location='{{ route('group_destroy', ['id' => $group['id'] ]) }}'">删除</button>
                             </td>

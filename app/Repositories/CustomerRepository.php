@@ -48,12 +48,14 @@ class CustomerRepository
      * @param $num
      * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
-    public function userGet($num)
+    public function userGet($num, $salesman = 0)
     {
+        $salesman = empty($salesman) ? Auth::id() : $salesman;
+
         return $this->customer
             ->select('customers.*', 'users.name as salesman_name')
             ->join('users', 'users.id', 'customers.salesman_id')
-            ->where('customers.salesman_id', Auth::id())
+            ->where('customers.salesman_id', $salesman)
             ->orderBy('customers.id', 'desc')
             ->paginate($num);
     }
@@ -252,17 +254,5 @@ class CustomerRepository
         });
 
         return $this->customer_chunk;
-    }
-
-    /**
-     * 按分组显示记录（超级管理级别）
-     *
-     * @param $num
-     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
-     */
-    public function getGroup($num, $group)
-    {
-        //靠分组查看，模拟‘manageGet’方法，将分组传入获取数据
-        return $this->manageGet($num, $group);
     }
 }
