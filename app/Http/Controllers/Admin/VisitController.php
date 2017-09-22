@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Services\Admin\CustomerService;
 use App\Services\Admin\GroupService;
 use App\Services\Admin\SalesmanService;
-use App\Services\VisitService;
+use App\Services\Admin\VisitService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 

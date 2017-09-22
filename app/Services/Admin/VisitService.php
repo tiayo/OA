@@ -1,11 +1,12 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Admin;
 
 use App\Events\AddMessage;
 use App\Repositories\VisitRepository;
 use App\Services\Admin\CustomerService;
 use Exception;
+use Illuminate\Support\Facades\Auth;
 
 class VisitService
 {
@@ -75,15 +76,19 @@ class VisitService
         $data['record'] = $post['record'] ?? null;
 
         if (empty($id)) {
-            //验证是否可以操作当前记录
-            $origin = $this->validata($id)->toArray();
-
-            //标记操作
+            //标记操作(插入)
             $option = 2;
 
             //构造数据
-            $data['salesman_id'] = $origin['salesman_id'];
+            $data['salesman_id'] = Auth::id();
             $data['customer_id'] = $post['customer_id'];
+
+        } else {
+            //标记操作(更新)
+            $option = 1;
+
+            //验证是否可以操作当前记录
+            $origin = $this->validata($id)->toArray();
         }
 
         //执行操作
@@ -92,7 +97,7 @@ class VisitService
         //执行写入消息事件
         return event(new AddMessage(
             'visit',
-            $option ?? 1,
+            $option,
             $data,
             $origin ?? []
         ));
