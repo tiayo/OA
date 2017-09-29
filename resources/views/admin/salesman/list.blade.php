@@ -42,7 +42,7 @@
 
 		            <tbody id="target">
                         @foreach($salesman as $user)
-                        <tr
+                        <tr>
                             <td>{{ $user['id'] }}</td>
                             <td>{{ $user['name'] }}</td>
                             <td>{{ $user['email'] }}</td>
