@@ -17,14 +17,6 @@
 		<section class="panel">
             <div class="panel-body">
                 <button type="button" class="btn btn-primary" onclick="location='{{ route('visit_add') }}'">添加回访记录</button>
-                <div class="btn-group">
-                    <button data-toggle="dropdown" class="btn btn-success dropdown-toggle" type="button">选择客户 <span class="caret"></span></button>
-                    <ul role="menu" class="dropdown-menu">
-                        @foreach($customers as $customer)
-                            <li><a href="{{ route('visit_search', ['keyword' => 'customer_'.$customer['id']]) }}">{{ $customer['name'] }}</a></li>
-                        @endforeach
-                    </ul>
-                </div>
                 @if(can('manage'))
                     <div class="btn-group">
                         <button data-toggle="dropdown" class="btn btn-success dropdown-toggle" type="button">选择业务员 <span class="caret"></span></button>

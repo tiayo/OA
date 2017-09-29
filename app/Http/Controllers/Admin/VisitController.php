@@ -64,22 +64,10 @@ class VisitController extends Controller
      */
     public function addView()
     {
-        $customers = $this->customer->get();
-
-        $result = [];
-
-        //添加回访记录只能添加自己的直属客户，这里过滤
-        foreach ($customers as $customer) {
-            if ($customer['salesman_id'] == Auth::id()) {
-                $result[] = $customer;
-            }
-        }
-
         return view('admin.visit.add_or_update', [
             'old_input' => $this->request->session()->get('_old_input'),
             'url' => Route('visit_add'),
             'sign' => 'add',
-            'customers' => $result,
         ]);
     }
 
