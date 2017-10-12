@@ -98,7 +98,11 @@
                                                         客户跟踪记录
                                                     @endif
 
-                                                    "{{ unserialize($message['content'])['name'] }}"
+                                                    @if ($message['option'] == 3)
+                                                        "{{ unserialize($message['origin'])['name'] }}"
+                                                        @else
+                                                        "{{ unserialize($message['content'])['name'] }}"
+                                                    @endif
 
                                                 </span>
                                             </a>
